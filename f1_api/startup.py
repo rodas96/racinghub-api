@@ -22,23 +22,9 @@ def get_settings() -> Settings:
 
 
 def get_version() -> str:
-    try:
-        print("VERSION:", version("f1_api"))
-        return version("f1_api")
-    except PackageNotFoundError:
-        possible_paths = [
-            Path(__file__).resolve().parent.parent / "pyproject.toml",
-            Path("/app/pyproject.toml"),
-        ]
-
-        for pyproject in possible_paths:
-            if pyproject.exists():
-                with open(pyproject, "r") as f:
-                    for line in f:
-                        if line.startswith("version"):
-                            return line.split("=")[1].strip().strip('"')
-
-        raise RuntimeError("Version not found in pyproject.toml or package metadata")
+    if not version:
+        raise PackageNotFoundError("f1_api package not found cant determine version")
+    return version("f1_api")
 
 
 def get_major_version() -> str:
