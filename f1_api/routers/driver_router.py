@@ -42,6 +42,14 @@ class DriverRouter:
             operation_id="getDriverResults",
             response_model=list[dict],
         )
+        self.router.add_api_route(
+            "/{driver_id}/seasons",
+            self.get_driver_seasons,
+            methods=["GET"],
+            summary="Get Driver Seasons",
+            operation_id="getDriverSeasons",
+            response_model=list[int],
+        )
 
     async def get_drivers(
         self,
@@ -85,3 +93,8 @@ class DriverRouter:
 
     async def get_driver_results(self, driver_id: str) -> list[dict]:
         return await self._driver_service.get_driver_results(driver_id=driver_id)
+
+    async def get_driver_seasons(self, driver_id: str) -> list[int]:
+        driver_seasons = await self._driver_service.get_driver_seasons(driver_id=driver_id)
+
+        return [season.year for season in driver_seasons]

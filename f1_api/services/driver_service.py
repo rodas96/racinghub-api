@@ -1,5 +1,5 @@
 from typing import Sequence
-from f1_api.models.models import Driver
+from f1_api.models.models import Driver, Season
 from f1_api.repositories.driver_repository import DriverRepository
 from f1_api.constants.cache_keys import DRIVERS_PREFIX
 from f1_api.schemas.driver_schema import DriverOrderField
@@ -46,6 +46,11 @@ class DriverService:
         results = await self._driver_repository.get_driver_results(driver_id)
 
         return results
+
+    async def get_driver_seasons(self, driver_id: str) -> Sequence[Season]:
+        await self._get_existing_driver(driver_id)
+
+        return await self._driver_repository.get_driver_seasons(driver_id)
 
     async def _get_existing_driver(self, driver_id: str) -> Driver:
         driver = await self._driver_repository.get_driver_by_id(driver_id)

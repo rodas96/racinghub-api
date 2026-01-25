@@ -1,7 +1,9 @@
 from pathlib import Path
 import sys
+
+from pydot import Any
 from f1_api.settings import settings
-from loguru import logger, Logger as LoguruLogger
+from loguru import logger
 
 
 class Logger:
@@ -35,12 +37,12 @@ class Logger:
                 level=settings.log_level,
             )
 
-    def get_logger(self) -> LoguruLogger:
+    def get_logger(self) -> Any:
         return logger
 
 
 __logger_provider = Logger()
 
 
-def get_logger() -> LoguruLogger:
+def get_logger() -> Any:
     return __logger_provider.get_logger()
