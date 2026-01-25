@@ -1,0 +1,28 @@
+from enum import Enum
+from fastapi import APIRouter
+from f1_api.repositories.driver_repository import DriverRepository
+from f1_api.services.driver_service import DriverService
+from f1_api.routers.driver_router import DriverRouter
+from typing import Any
+
+
+class RouterFactory:
+    """Factory to build FastAPI routers with proper type hints."""
+
+    def build(self, prefix: str, tags: list[str | Enum] | None, **kwargs: Any) -> APIRouter:
+        """Build an APIRouter, forwarding all arguments to FastAPI's APIRouter."""
+        if not prefix.startswith("/"):
+            prefix = f"/{prefix}"
+
+        return APIRouter(prefix=prefix, tags=tags, **kwargs)
+
+    def build_routers(self) -> list[APIRouter]:
+        """Build and return a list of APIRouters for the application."""
+
+        driver_repository = DriverRepository()
+        driver_service = DriverService(driver_repository)
+        driver_router = DriverRouter(driver_service, factory=self.build)
+
+        return [
+            driver_router.router,
+        ]

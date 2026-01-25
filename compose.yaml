@@ -1,0 +1,32 @@
+services:
+  f1-api:
+    build:
+      dockerfile: ./dockerfile.f1-api
+    # volumes:
+    #   - "./f1_api:/app/f1_api"
+    #   - "./db:/app/db"
+    #   - "./docker/prestart.sh:/app/prestart.sh"
+    ports:
+      - "80:80"
+    environment:
+      IS_DEV: true
+      RELOAD: true
+      DATABASE_URL: postgresql://main:main12345@db/main
+      CACHE_REDIS_HOST: redis
+      CACHE_REDIS_PORT: 6379
+    depends_on:
+      - db
+      - redis
+
+  redis:
+    image: redis
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: main12345
+      POSTGRES_USER: main
+      POSTGRES_DB: main
+    volumes:
+      - ./f1db-sql-postgresql.sql:/docker-entrypoint-initdb.d/f1db-sql-postgresql.sql:ro

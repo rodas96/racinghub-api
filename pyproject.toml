@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=67.0", "setuptools_scm[toml]>=7.1"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+readme = { file = ["README.md"] }
+
+[tool.setuptools.package-data]
+f1_api = ["py.typed"]
+
+[tool.setuptools_scm]
+fallback_version = "0.0.0-dev"
+write_to = "f1_api/_version.py"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*", "docs*"]
+
+[project]
+name = "f1_api"
+description = "Formula 1 api. Historical and up to date data"
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.10"
+license = { "file" = "LICENSE" }
+authors = [{ "name" = "Rodrigo Silva" }]
+dependencies = [
+  "SQLAlchemy",
+  "aiocache",
+  "aiosqlite",
+  "alembic",
+  "asyncpg",
+  "fastapi",
+  "psycopg2-binary",
+  "pydantic~=2.0",
+  "pydantic-settings",
+  "redis",
+  "uvicorn[standard]",
+]
+dynamic = ["version"]
+
+[dependency-groups]
+dev = [
+  "build",
+  "dapperdata",
+  "glom",
+  "greenlet",
+  "httpx",
+  "mypy",
+  "paracelsus",
+  "pytest",
+  "pytest-asyncio",
+  "pytest-cov",
+  "pytest-pretty",
+  "ruamel.yaml",
+  "ruff",
+  "tombi",
+  "uv"
+]
+
+[tool.ruff]
+exclude = [".venv", "./f1_api/_version.py"]
+line-length = 120
+
+[tool.coverage.run]
+concurrency = ["thread", "greenlet"]
+omit = [
+  "./f1_api/_version.py",
+  "./f1_api/__init__.py",
+  "./tests/*",
+]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = false
+disallow_untyped_defs = true
+no_implicit_optional = true
+plugins = ["pydantic.mypy"]
+strict_optional = true
+warn_return_any = true
+warn_unused_ignores = true
+
+[tool.uv]
+exclude-newer = "1 week"
