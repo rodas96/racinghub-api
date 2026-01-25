@@ -43,7 +43,7 @@ def run_migrations_offline() -> None:
 
     """
     context.configure(
-        url=settings.database_url,
+        url=settings.database_url.replace("postgresql+asyncpg://", "postgresql://"),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -61,7 +61,7 @@ def run_migrations_online() -> None:
 
     """
     connectable = engine_from_config(
-        {"db.url": settings.database_url, "db.echo": "True"},
+        {"db.url": settings.database_url.replace("postgresql+asyncpg://", "postgresql://"), "db.echo": "True"},
         prefix="db.",
         poolclass=pool.NullPool,
     )
