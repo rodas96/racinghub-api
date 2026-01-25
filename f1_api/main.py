@@ -4,6 +4,9 @@ from starlette.responses import RedirectResponse
 from fastapi import FastAPI
 from f1_api.prodivers.cache import configure_caches
 from f1_api import startup
+from f1_api.prodivers.logger import get_logger
+
+logger = get_logger()
 
 
 try:
@@ -33,5 +36,5 @@ try:
 
 
 except Exception as e:
-    print(f"Error during app initialization: {e}")
+    logger.error(f"Error during app initialization: {e}")
     raise e
