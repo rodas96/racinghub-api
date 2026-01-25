@@ -1,4 +1,4 @@
-name: Publish Docker Images
+name: Build Publish and Deploy Docker Image
 
 on:
   pull_request:
@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         image:
-          - www
+          - f1-api
 
     permissions:
       contents: read
