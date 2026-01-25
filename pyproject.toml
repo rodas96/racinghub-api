@@ -33,6 +33,7 @@ dependencies = [
   "pydantic~=2.0",
   "pydantic-settings",
   "redis",
+  "loguru",
   "uvicorn[standard]",
 ]
 dynamic = ["version"]

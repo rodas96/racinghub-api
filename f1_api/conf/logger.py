@@ -1,0 +1,9 @@
+from pydantic_settings import BaseSettings
+
+
+class LoggerSettings(BaseSettings):
+    log_level: str = "INFO"
+    log_dir: str = "./logs"
+
+    class Config:
+        env_file = ".env"
