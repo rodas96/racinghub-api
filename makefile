@@ -167,4 +167,7 @@ create_migration:
 check_ungenerated_migrations:
 	$(UV) run alembic check
 
+.PHONY: check_ungenerated_migrations_ci
+check_ungenerated_migrations_ci:
+	$(UV) run alembic upgrade head --sql
 
