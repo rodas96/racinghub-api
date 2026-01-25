@@ -1,4 +1,3 @@
-from pathlib import Path
 from fastapi import APIRouter, FastAPI
 from f1_api.factories.router_factory import RouterFactory
 from f1_api.settings import settings, Settings
@@ -22,9 +21,11 @@ def get_settings() -> Settings:
 
 
 def get_version() -> str:
-    if not version:
+    v = version("f1_api")
+    if not v:
         raise PackageNotFoundError("f1_api package not found cant determine version")
-    return version("f1_api")
+
+    return v
 
 
 def get_major_version() -> str:
