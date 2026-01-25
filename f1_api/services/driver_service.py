@@ -6,6 +6,7 @@ from f1_api.schemas.driver_schema import DriverOrderField
 from f1_api.schemas.requests import SortOrder
 from f1_api.utils import get_cache_key
 from f1_api.prodivers.cache import get_cached, set_cached
+from fastapi import HTTPException
 
 
 class DriverService:
@@ -36,3 +37,20 @@ class DriverService:
         await set_cached(cache_key, (drivers, total))
 
         return drivers, total
+
+    async def get_driver(self, driver_id: str) -> Driver:
+        return await self._get_existing_driver(driver_id)
+
+    async def get_driver_results(self, driver_id: str) -> list[dict]:
+        await self._get_existing_driver(driver_id)
+        results = await self._driver_repository.get_driver_results(driver_id)
+
+        return results
+
+    async def _get_existing_driver(self, driver_id: str) -> Driver:
+        driver = await self._driver_repository.get_driver_by_id(driver_id)
+
+        if not driver:
+            raise HTTPException(status_code=404, detail="Driver not found")
+
+        return driver

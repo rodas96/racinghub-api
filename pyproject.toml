@@ -29,11 +29,11 @@ dependencies = [
   "alembic",
   "asyncpg",
   "fastapi",
+  "loguru",
   "psycopg2-binary",
   "pydantic~=2.0",
   "pydantic-settings",
   "redis",
-  "loguru",
   "uvicorn[standard]",
 ]
 dynamic = ["version"]

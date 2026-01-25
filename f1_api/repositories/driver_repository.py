@@ -1,6 +1,6 @@
 from typing import Sequence
 from sqlalchemy import func, select
-from f1_api.models.models import Driver
+from f1_api.models.models import Driver, t_race_result
 from f1_api.repositories.base_repository import BaseRepository
 from f1_api.schemas.driver_schema import DriverOrderField
 from f1_api.schemas.requests import SortOrder
@@ -32,3 +32,15 @@ class DriverRepository(BaseRepository):
         total = await self.db.scalar(count_query) or 0
 
         return drivers, total
+
+    async def get_driver_by_id(self, driver_id: str) -> Driver | None:
+        query = select(Driver).where(Driver.id == driver_id)
+        result = await self.db.execute(query)
+
+        return result.scalars().first()
+
+    async def get_driver_results(self, driver_id: str) -> list[dict]:
+        stmt = select(t_race_result).where(t_race_result.c.driver_id == driver_id)
+        result = await self.db.execute(stmt)
+
+        return [dict(row) for row in result.fetchall()]

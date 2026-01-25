@@ -1,19 +1,19 @@
 from pathlib import Path
 import sys
 from f1_api.settings import settings
-from loguru import logger
+from loguru import logger, Logger as LoguruLogger
 
 
 class Logger:
     _instance = None
     _initialized = False
 
-    def __new__(cls):
+    def __new__(cls) -> "Logger":
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         if not self._initialized:
             self._setup_logger()
             Logger._initialized = True
@@ -35,12 +35,12 @@ class Logger:
                 level=settings.log_level,
             )
 
-    def get_logger(self):
+    def get_logger(self) -> LoguruLogger:
         return logger
 
 
 __logger_provider = Logger()
 
 
-def get_logger():
+def get_logger() -> LoguruLogger:
     return __logger_provider.get_logger()

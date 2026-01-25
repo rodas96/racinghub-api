@@ -26,6 +26,22 @@ class DriverRouter:
             operation_id="getDrivers",
             response_model=PagedResponse[DriverSchema],
         )
+        self.router.add_api_route(
+            "/{driver_id}",
+            self.get_driver_by_id,
+            methods=["GET"],
+            summary="Get Driver by ID",
+            operation_id="getDriverById",
+            response_model=DriverSchema,
+        )
+        self.router.add_api_route(
+            "/{driver_id}/results",
+            self.get_driver_results,
+            methods=["GET"],
+            summary="Get Driver Results",
+            operation_id="getDriverResults",
+            response_model=list[dict],
+        )
 
     async def get_drivers(
         self,
@@ -61,3 +77,11 @@ class DriverRouter:
             limit=limit,
             total=total,
         )
+
+    async def get_driver_by_id(self, driver_id: str) -> DriverSchema:
+        driver = await self._driver_service.get_driver(driver_id=driver_id)
+
+        return DriverSchema.model_validate(driver)
+
+    async def get_driver_results(self, driver_id: str) -> list[dict]:
+        return await self._driver_service.get_driver_results(driver_id=driver_id)
