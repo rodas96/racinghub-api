@@ -17,7 +17,7 @@ class DriverOrderField(str, Enum):
     TOTAL_FASTEST_LAPS = "total_fastest_laps"
 
 
-class Driver(BaseModel):
+class DriverSchema(BaseModel):
     id: str
     name: str
     first_name: str
@@ -50,5 +50,4 @@ class Driver(BaseModel):
     best_starting_grid_position: Optional[int] = None
     best_race_result: Optional[int] = None
 
-    class ConfigDict:
-        from_attributes = True
+    model_config = {"from_attributes": True}

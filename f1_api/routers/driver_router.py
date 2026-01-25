@@ -1,6 +1,6 @@
 from typing import Callable
 from fastapi import APIRouter, Query
-from f1_api.schemas.driver_schema import Driver, DriverOrderField
+from f1_api.schemas.driver_schema import DriverSchema, DriverOrderField
 from f1_api.schemas.requests import SortOrder
 from f1_api.schemas.responses import PagedResponse
 from f1_api.services.driver_service import DriverService
@@ -24,7 +24,7 @@ class DriverRouter:
             methods=["GET"],
             summary="Get Drivers",
             operation_id="getDrivers",
-            response_model=PagedResponse[Driver],
+            response_model=PagedResponse[DriverSchema],
         )
 
     async def get_drivers(
@@ -48,15 +48,15 @@ class DriverRouter:
             SortOrder.ASC,
             description="Order direction if not specified, defaults to ascending",
         ),
-    ) -> PagedResponse[Driver]:
+    ) -> PagedResponse[DriverSchema]:
         skip = (page - 1) * limit
 
         drivers, total = await self._driver_service.get_drivers(
             skip=skip, limit=limit, order_by=order_by, sort_by=sort_by
         )
 
-        return PagedResponse[Driver].create(
-            data=[Driver.model_validate(driver) for driver in drivers],
+        return PagedResponse[DriverSchema].create(
+            data=[DriverSchema.model_validate(driver) for driver in drivers],
             page=page,
             limit=limit,
             total=total,

@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+f1-db-dump.sql
 # C extensions
 *.so
 f1db-sql-postgresql.sql

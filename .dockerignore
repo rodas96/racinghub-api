@@ -13,3 +13,4 @@
 !/README.md
 !/setup.*
 !/uv.lock
+!/f1-db-dump.sql

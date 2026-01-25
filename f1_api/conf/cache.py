@@ -6,7 +6,7 @@ class CacheSettings(BaseSettings):
     cache_enabled: bool = True
 
     # Redis configuration
-    cache_redis_host: str | None = None
+    cache_redis_host: str | None = "localhost"
     cache_redis_port: int = 6379
 
     # Default TTLs (in seconds)
