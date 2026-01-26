@@ -1,9 +1,8 @@
 from pathlib import Path
 import sys
-
-from pydot import Any
 from f1_api.settings import settings
 from loguru import logger
+from typing import Any
 
 
 class Logger:
