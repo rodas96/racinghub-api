@@ -143,31 +143,5 @@ document_schema:
 paracelsus_check:
 	$(UV) run python -m paracelsus.cli inject docs/dev/database.md $(PACKAGE_SLUG).models.models:Base --import-module "$(PACKAGE_SLUG).models:*" --check
 
-.PHONY: run_migrations
-run_migrations:
-	$(UV) run alembic upgrade head
 
-.PHONY: reset_db
-reset_db: clear_db run_migrations
-
-.PHONY: clear_db
-clear_db:
-	rm -Rf test.db*
-
-.PHONY: create_migration
-create_migration:
-	@if [ -z "$(MESSAGE)" ]; then echo "Please add a message parameter for the migration (make create_migration MESSAGE=\"database migration notes\")."; exit 1; fi
-	rm $(MIGRATION_DATABASE) | true
-	DATABASE_URL=sqlite:///$(MIGRATION_DATABASE) $(UV) run alembic upgrade head
-	DATABASE_URL=sqlite:///$(MIGRATION_DATABASE) $(UV) run alembic revision --autogenerate -m "$(MESSAGE)"
-	rm $(MIGRATION_DATABASE)
-	$(UV) run ruff format ./db
-
-.PHONY: check_ungenerated_migrations
-check_ungenerated_migrations:
-	$(UV) run alembic check
-
-.PHONY: check_ungenerated_migrations_ci
-check_ungenerated_migrations_ci:
-	$(UV) run alembic upgrade head --sql
 

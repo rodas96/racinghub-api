@@ -26,7 +26,6 @@ dependencies = [
   "SQLAlchemy",
   "aiocache",
   "aiosqlite",
-  "alembic",
   "asyncpg",
   "fastapi",
   "loguru",

@@ -6,7 +6,6 @@
 !/.python-version
 !/db
 !/docker
-!/alembic.ini
 !/LICENSE
 !/makefile
 !/pyproject.toml
