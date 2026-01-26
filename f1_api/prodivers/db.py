@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from typing import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from f1_api.settings import settings
 
@@ -35,3 +36,18 @@ def get_db_from_context() -> AsyncSession:
         raise RuntimeError("No database session in context. Did you forget middleware?")
 
     return session
+
+
+async def health_check_db() -> str:
+    """
+    Perform a health check on the database.
+
+    Returns:
+        "healthy" if the database is reachable, otherwise "unhealthy".
+    """
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        return "healthy"
+    except Exception:
+        return "unhealthy"

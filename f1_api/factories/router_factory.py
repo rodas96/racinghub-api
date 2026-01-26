@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from f1_api.repositories.driver_repository import DriverRepository
 from f1_api.services.driver_service import DriverService
 from f1_api.routers.driver_router import DriverRouter
+from f1_api.routers.health_router import HealthRouter
 from typing import Any
 
 
@@ -22,7 +23,8 @@ class RouterFactory:
         driver_repository = DriverRepository()
         driver_service = DriverService(driver_repository)
         driver_router = DriverRouter(driver_service, factory=self.build)
-
+        health_router = HealthRouter(factory=self.build)
         return [
             driver_router.router,
+            health_router.router,
         ]

@@ -1,0 +1,202 @@
+name: Deploy Database Dump
+
+on:
+  workflow_dispatch:
+    inputs:
+      dump_url:
+        description: "Database dump URL from f1db releases"
+        required: true
+        default: "https://github.com/f1db/f1db/releases/latest/download/f1db-sql-postgresql.sql.gz"
+
+jobs:
+  deploy-db:
+    name: Deploy Database to Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: SSH & deploy database to droplet
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            cd ~/f1api-deploy
+
+            # Source environment variables
+            set -a
+            source .env
+            set +a
+
+            echo "📥 Downloading database dump from f1db..."
+            curl -L -o f1-db-dump-new.sql.gz "${{ github.event.inputs.dump_url }}"
+
+            if [ $? -ne 0 ]; then
+              echo "❌ Failed to download dump"
+              exit 1
+            fi
+
+            echo "📦 Extracting dump..."
+            gunzip -f f1-db-dump-new.sql.gz
+
+            if [ $? -ne 0 ]; then
+              echo "❌ Failed to extract dump"
+              rm -f f1-db-dump-new.sql.gz
+              exit 1
+            fi
+
+            echo "🗄️ Starting new database (f1-db-new)..."
+            docker run -d \
+              --name f1-db-new \
+              --network f1api-deploy_internal \
+              -e POSTGRES_USER=${POSTGRES_USER} \
+              -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+              -e POSTGRES_DB=${POSTGRES_DB} \
+              -v $(pwd)/f1-db-dump-new.sql:/docker-entrypoint-initdb.d/f1-db-dump.sql:ro \
+              postgres:16
+
+            if [ $? -ne 0 ]; then
+              echo "❌ Failed to start new database"
+              rm -f f1-db-dump-new.sql
+              exit 1
+            fi
+
+            echo "⏳ Waiting for new database to initialize..."
+            sleep 30
+
+            # Wait until new database is ready (max 5 minutes)
+            TIMEOUT=300
+            ELAPSED=0
+            until docker exec f1-db-new pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}; do
+              if [ $ELAPSED -ge $TIMEOUT ]; then
+                echo "❌ New database failed to become ready in time"
+                echo "🔄 Rolling back - removing new database..."
+                docker stop f1-db-new
+                docker rm f1-db-new
+                rm -f f1-db-dump-new.sql
+                exit 1
+              fi
+              echo "Waiting for new database... ($ELAPSED/$TIMEOUT seconds)"
+              sleep 5
+              ELAPSED=$((ELAPSED + 5))
+            done
+
+            echo "✅ New database is ready!"
+
+            echo "🔍 Validating database schema..."
+            TABLE_COUNT=$(docker exec f1-db-new psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';")
+
+            if [ "$TABLE_COUNT" -lt 5 ]; then
+              echo "❌ Database validation failed - insufficient tables found: $TABLE_COUNT"
+              echo "🔄 Rolling back - removing new database..."
+              docker stop f1-db-new
+              docker rm f1-db-new
+              rm -f f1-db-dump-new.sql
+              exit 1
+            fi
+
+            echo "✅ Database schema validated ($TABLE_COUNT tables found)"
+
+            echo "🔄 Updating docker-compose to point to new database..."
+            cp docker-compose.yml docker-compose.yml.backup
+            sed -i 's/container_name: f1-db$/container_name: f1-db-new/g' docker-compose.yml
+            sed -i 's/@f1-db\//@f1-db-new\//g' docker-compose.yml
+
+            echo "🚀 Restarting API with new database..."
+            docker compose up -d f1-api
+
+            if [ $? -ne 0 ]; then
+              echo "❌ Failed to restart API"
+              echo "🔄 Rolling back..."
+              mv docker-compose.yml.backup docker-compose.yml
+              docker compose up -d f1-api
+              docker stop f1-db-new
+              docker rm f1-db-new
+              rm -f f1-db-dump-new.sql
+              exit 1
+            fi
+
+            echo "⏳ Waiting for API to stabilize..."
+            sleep 15
+
+            echo "🔍 Testing API health..."
+            HEALTH_CHECK_PASSED=false
+            for i in {1..10}; do
+              if curl -f http://localhost/health > /dev/null 2>&1; then
+                echo "✅ API health check passed"
+                HEALTH_CHECK_PASSED=true
+                break
+              fi
+              echo "Attempt $i/10: API not responding yet..."
+              sleep 3
+            done
+
+            if [ "$HEALTH_CHECK_PASSED" = false ]; then
+              echo "❌ API health check failed after multiple attempts"
+              echo "🔄 Rolling back to old database..."
+              
+              # Revert docker-compose
+              mv docker-compose.yml.backup docker-compose.yml
+              
+              # Restart API with old database
+              docker compose up -d f1-api
+              
+              # Remove new database
+              docker stop f1-db-new
+              docker rm f1-db-new
+              rm -f f1-db-dump-new.sql
+              
+              echo "✅ Rolled back to old database"
+              echo "Current status:"
+              docker compose ps
+              exit 1
+            fi
+
+            echo "🗑️ Removing old database..."
+            docker stop f1-db || true
+            docker rm f1-db || true
+            docker volume rm f1api-deploy_postgres_data || true
+
+            echo "🔄 Renaming new database to f1-db..."
+            docker stop f1-db-new
+            docker rename f1-db-new f1-db
+
+            echo "🔄 Reverting docker-compose.yml..."
+            mv docker-compose.yml.backup docker-compose.yml
+
+            echo "🚀 Final restart with correct naming..."
+            docker compose up -d
+
+            echo "🧹 Cleaning up dump file..."
+            rm -f f1-db-dump-new.sql
+
+            echo "🧹 Cleaning up old images..."
+            docker image prune -f
+
+            echo "✅ Database deployment complete!"
+
+            echo "📊 Final status:"
+            docker compose ps
+
+      - name: Verify Deployment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            cd ~/f1api-deploy
+
+            # Source environment variables
+            set -a
+            source .env
+            set +a
+
+            echo "🔍 Verifying database connection..."
+            docker compose exec -T f1-db psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';"
+
+            echo "🌐 Checking API health..."
+            sleep 5
+            curl -f http://localhost/health || echo "⚠️ API health check endpoint not responding"

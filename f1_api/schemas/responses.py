@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Generic
 from annotated_types import T
 from pydantic import BaseModel, Field
@@ -24,3 +25,10 @@ class PagedResponse(BaseModel, Generic[T]):
             has_next=page < total_pages,
             has_previous=page > 1,
         )
+
+
+class HealthResponse(BaseModel):
+    status: str
+    timestamp: datetime
+    database: str
+    cache: str

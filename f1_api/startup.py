@@ -8,6 +8,7 @@ from f1_api.middleware.security_headers_middleware import security_headers_middl
 from f1_api.middleware.process_time_middleware import process_time_middleware
 from f1_api.middleware.exception_handler_middleware import exception_handler_middleware
 
+
 factory = RouterFactory()
 
 

@@ -233,3 +233,28 @@ async def clear_cache(alias: str = "memory") -> None:
     """
     cache = get_cache(alias)
     await cache.clear()
+
+
+async def health_check_cache(alias: str = "memory") -> str:
+    """
+    Perform a health check on the specified cache.
+
+    Args:
+        alias: Cache alias to check ("memory" or "persistent")
+
+    Returns:
+        "healthy" if the cache is reachable, otherwise "unhealthy".
+    """
+    cache = get_cache(alias)
+    try:
+        test_key = "health_check_key"
+        test_value = "health_check_value"
+        await cache.set(test_key, test_value, ttl=5)
+        value = await cache.get(test_key)
+        await cache.delete(test_key)
+        if value == test_value:
+            return "healthy"
+        else:
+            return "unhealthy"
+    except Exception:
+        return "unhealthy"
