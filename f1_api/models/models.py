@@ -15,14 +15,14 @@ from sqlalchemy import (
     Table,
     UniqueConstraint,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.orm import declarative_base
-
-Base = declarative_base()
-BaseType: type = Base
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
-class Continent(BaseType):
+class Base(DeclarativeBase):
+    pass
+
+
+class Continent(Base):
     __tablename__ = "continent"
     __table_args__ = (
         PrimaryKeyConstraint("id", name="continent_pkey"),
@@ -54,7 +54,7 @@ t_driver_of_the_day_result = Table(
 )
 
 
-class Entrant(BaseType):
+class Entrant(Base):
     __tablename__ = "entrant"
     __table_args__ = (PrimaryKeyConstraint("id", name="entrant_pkey"), Index("entr_name_idx", "name"))
 
@@ -340,7 +340,7 @@ t_race_result = Table(
 )
 
 
-class Season(BaseType):
+class Season(Base):
     __tablename__ = "season"
     __table_args__ = (PrimaryKeyConstraint("year", name="season_pkey"),)
 
@@ -503,7 +503,7 @@ t_warming_up_result = Table(
 )
 
 
-class Country(BaseType):
+class Country(Base):
     __tablename__ = "country"
     __table_args__ = (
         ForeignKeyConstraint(["continent_id"], ["continent.id"], name="country_continent_id_fkey"),
@@ -542,7 +542,7 @@ class Country(BaseType):
     tyre_manufacturer: Mapped[list["TyreManufacturer"]] = relationship("TyreManufacturer", back_populates="country")
 
 
-class Circuit(BaseType):
+class Circuit(Base):
     __tablename__ = "circuit"
     __table_args__ = (
         ForeignKeyConstraint(["country_id"], ["country.id"], name="circuit_country_id_fkey"),
@@ -573,7 +573,7 @@ class Circuit(BaseType):
     race: Mapped[list["Race"]] = relationship("Race", back_populates="circuit")
 
 
-class Constructor(BaseType):
+class Constructor(Base):
     __tablename__ = "constructor"
     __table_args__ = (
         ForeignKeyConstraint(["country_id"], ["country.id"], name="constructor_country_id_fkey"),
@@ -640,7 +640,7 @@ class Constructor(BaseType):
     )
 
 
-class Driver(BaseType):
+class Driver(Base):
     __tablename__ = "driver"
     __table_args__ = (
         ForeignKeyConstraint(
@@ -726,7 +726,7 @@ class Driver(BaseType):
     )
 
 
-class EngineManufacturer(BaseType):
+class EngineManufacturer(Base):
     __tablename__ = "engine_manufacturer"
     __table_args__ = (
         ForeignKeyConstraint(["country_id"], ["country.id"], name="engine_manufacturer_country_id_fkey"),
@@ -782,7 +782,7 @@ class EngineManufacturer(BaseType):
     )
 
 
-class GrandPrix(BaseType):
+class GrandPrix(Base):
     __tablename__ = "grand_prix"
     __table_args__ = (
         ForeignKeyConstraint(["country_id"], ["country.id"], name="grand_prix_country_id_fkey"),
@@ -806,7 +806,7 @@ class GrandPrix(BaseType):
     race: Mapped[list["Race"]] = relationship("Race", back_populates="grand_prix")
 
 
-class SeasonEntrant(BaseType):
+class SeasonEntrant(Base):
     __tablename__ = "season_entrant"
     __table_args__ = (
         ForeignKeyConstraint(["country_id"], ["country.id"], name="season_entrant_country_id_fkey"),
@@ -827,7 +827,7 @@ class SeasonEntrant(BaseType):
     season: Mapped["Season"] = relationship("Season", back_populates="season_entrant")
 
 
-class TyreManufacturer(BaseType):
+class TyreManufacturer(Base):
     __tablename__ = "tyre_manufacturer"
     __table_args__ = (
         ForeignKeyConstraint(["country_id"], ["country.id"], name="tyre_manufacturer_country_id_fkey"),
@@ -860,7 +860,7 @@ class TyreManufacturer(BaseType):
     race_data: Mapped[list["RaceData"]] = relationship("RaceData", back_populates="tyre_manufacturer")
 
 
-class Chassis(BaseType):
+class Chassis(Base):
     __tablename__ = "chassis"
     __table_args__ = (
         ForeignKeyConstraint(["constructor_id"], ["constructor.id"], name="chassis_constructor_id_fkey"),
@@ -881,7 +881,7 @@ class Chassis(BaseType):
     )
 
 
-class ConstructorChronology(BaseType):
+class ConstructorChronology(Base):
     __tablename__ = "constructor_chronology"
     __table_args__ = (
         ForeignKeyConstraint(["constructor_id"], ["constructor.id"], name="constructor_chronology_constructor_id_fkey"),
@@ -915,7 +915,7 @@ class ConstructorChronology(BaseType):
     )
 
 
-class DriverFamilyRelationship(BaseType):
+class DriverFamilyRelationship(Base):
     __tablename__ = "driver_family_relationship"
     __table_args__ = (
         ForeignKeyConstraint(["driver_id"], ["driver.id"], name="driver_family_relationship_driver_id_fkey"),
@@ -944,7 +944,7 @@ class DriverFamilyRelationship(BaseType):
     )
 
 
-class Engine(BaseType):
+class Engine(Base):
     __tablename__ = "engine"
     __table_args__ = (
         ForeignKeyConstraint(
@@ -973,7 +973,7 @@ class Engine(BaseType):
     )
 
 
-class Race(BaseType):
+class Race(Base):
     __tablename__ = "race"
     __table_args__ = (
         ForeignKeyConstraint(["circuit_id"], ["circuit.id"], name="race_circuit_id_fkey"),
@@ -1046,7 +1046,7 @@ class Race(BaseType):
     race_driver_standing: Mapped[list["RaceDriverStanding"]] = relationship("RaceDriverStanding", back_populates="race")
 
 
-class SeasonConstructor(BaseType):
+class SeasonConstructor(Base):
     __tablename__ = "season_constructor"
     __table_args__ = (
         ForeignKeyConstraint(["constructor_id"], ["constructor.id"], name="season_constructor_constructor_id_fkey"),
@@ -1077,7 +1077,7 @@ class SeasonConstructor(BaseType):
     season: Mapped["Season"] = relationship("Season", back_populates="season_constructor")
 
 
-class SeasonConstructorStanding(BaseType):
+class SeasonConstructorStanding(Base):
     __tablename__ = "season_constructor_standing"
     __table_args__ = (
         ForeignKeyConstraint(
@@ -1113,7 +1113,7 @@ class SeasonConstructorStanding(BaseType):
     season: Mapped["Season"] = relationship("Season", back_populates="season_constructor_standing")
 
 
-class SeasonDriver(BaseType):
+class SeasonDriver(Base):
     __tablename__ = "season_driver"
     __table_args__ = (
         ForeignKeyConstraint(["driver_id"], ["driver.id"], name="season_driver_driver_id_fkey"),
@@ -1144,7 +1144,7 @@ class SeasonDriver(BaseType):
     season: Mapped["Season"] = relationship("Season", back_populates="season_driver")
 
 
-class SeasonDriverStanding(BaseType):
+class SeasonDriverStanding(Base):
     __tablename__ = "season_driver_standing"
     __table_args__ = (
         ForeignKeyConstraint(["driver_id"], ["driver.id"], name="season_driver_standing_driver_id_fkey"),
@@ -1168,7 +1168,7 @@ class SeasonDriverStanding(BaseType):
     season: Mapped["Season"] = relationship("Season", back_populates="season_driver_standing")
 
 
-class SeasonEngineManufacturer(BaseType):
+class SeasonEngineManufacturer(Base):
     __tablename__ = "season_engine_manufacturer"
     __table_args__ = (
         ForeignKeyConstraint(
@@ -1204,7 +1204,7 @@ class SeasonEngineManufacturer(BaseType):
     season: Mapped["Season"] = relationship("Season", back_populates="season_engine_manufacturer")
 
 
-class SeasonEntrantConstructor(BaseType):
+class SeasonEntrantConstructor(Base):
     __tablename__ = "season_entrant_constructor"
     __table_args__ = (
         ForeignKeyConstraint(
@@ -1239,7 +1239,7 @@ class SeasonEntrantConstructor(BaseType):
     season: Mapped["Season"] = relationship("Season", back_populates="season_entrant_constructor")
 
 
-class SeasonEntrantDriver(BaseType):
+class SeasonEntrantDriver(Base):
     __tablename__ = "season_entrant_driver"
     __table_args__ = (
         ForeignKeyConstraint(["constructor_id"], ["constructor.id"], name="season_entrant_driver_constructor_id_fkey"),
@@ -1284,7 +1284,7 @@ class SeasonEntrantDriver(BaseType):
     season: Mapped["Season"] = relationship("Season", back_populates="season_entrant_driver")
 
 
-class SeasonEntrantTyreManufacturer(BaseType):
+class SeasonEntrantTyreManufacturer(Base):
     __tablename__ = "season_entrant_tyre_manufacturer"
     __table_args__ = (
         ForeignKeyConstraint(
@@ -1334,7 +1334,7 @@ class SeasonEntrantTyreManufacturer(BaseType):
     season: Mapped["Season"] = relationship("Season", back_populates="season_entrant_tyre_manufacturer")
 
 
-class SeasonTyreManufacturer(BaseType):
+class SeasonTyreManufacturer(Base):
     __tablename__ = "season_tyre_manufacturer"
     __table_args__ = (
         ForeignKeyConstraint(
@@ -1367,7 +1367,7 @@ class SeasonTyreManufacturer(BaseType):
     season: Mapped["Season"] = relationship("Season", back_populates="season_tyre_manufacturer")
 
 
-class RaceConstructorStanding(BaseType):
+class RaceConstructorStanding(Base):
     __tablename__ = "race_constructor_standing"
     __table_args__ = (
         ForeignKeyConstraint(
@@ -1404,7 +1404,7 @@ class RaceConstructorStanding(BaseType):
     race: Mapped["Race"] = relationship("Race", back_populates="race_constructor_standing")
 
 
-class RaceData(BaseType):
+class RaceData(Base):
     __tablename__ = "race_data"
     __table_args__ = (
         ForeignKeyConstraint(["constructor_id"], ["constructor.id"], name="race_data_constructor_id_fkey"),
@@ -1508,7 +1508,7 @@ class RaceData(BaseType):
     tyre_manufacturer: Mapped["TyreManufacturer"] = relationship("TyreManufacturer", back_populates="race_data")
 
 
-class RaceDriverStanding(BaseType):
+class RaceDriverStanding(Base):
     __tablename__ = "race_driver_standing"
     __table_args__ = (
         ForeignKeyConstraint(["driver_id"], ["driver.id"], name="race_driver_standing_driver_id_fkey"),
@@ -1533,7 +1533,7 @@ class RaceDriverStanding(BaseType):
     race: Mapped["Race"] = relationship("Race", back_populates="race_driver_standing")
 
 
-class SeasonEntrantChassis(BaseType):
+class SeasonEntrantChassis(Base):
     __tablename__ = "season_entrant_chassis"
     __table_args__ = (
         ForeignKeyConstraint(["chassis_id"], ["chassis.id"], name="season_entrant_chassis_chassis_id_fkey"),
@@ -1575,7 +1575,7 @@ class SeasonEntrantChassis(BaseType):
     season: Mapped["Season"] = relationship("Season", back_populates="season_entrant_chassis")
 
 
-class SeasonEntrantEngine(BaseType):
+class SeasonEntrantEngine(Base):
     __tablename__ = "season_entrant_engine"
     __table_args__ = (
         ForeignKeyConstraint(["constructor_id"], ["constructor.id"], name="season_entrant_engine_constructor_id_fkey"),

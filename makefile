@@ -143,5 +143,7 @@ document_schema:
 paracelsus_check:
 	$(UV) run python -m paracelsus.cli inject docs/dev/database.md $(PACKAGE_SLUG).models.models:Base --import-module "$(PACKAGE_SLUG).models:*" --check
 
-
+.PHONE: generate_models
+generate_models:
+	bash scripts/autogen_models.sh
 

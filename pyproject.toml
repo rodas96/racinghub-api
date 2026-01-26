@@ -53,7 +53,7 @@ dev = [
   "ruamel.yaml",
   "ruff",
   "tombi",
-  "uv"
+  "uv",
 ]
 
 [tool.ruff]
