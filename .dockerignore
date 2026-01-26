@@ -5,7 +5,6 @@
 !/f1_api
 !/.python-version
 !/db
-!/docker
 !/LICENSE
 !/makefile
 !/pyproject.toml

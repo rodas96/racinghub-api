@@ -29,7 +29,6 @@ COPY pyproject.toml uv.lock /app/
 RUN uv sync --frozen --no-install-project --python /usr/local/bin/python
 
 # Copy application code
-COPY ./docker/prestart.sh /app/prestart.sh
 COPY . /app/
 
 
