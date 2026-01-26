@@ -35,11 +35,3 @@ def get_db_from_context() -> AsyncSession:
         raise RuntimeError("No database session in context. Did you forget middleware?")
 
     return session
-
-
-async def test_data(session: AsyncSession) -> None:
-    """Populate the database with initial test data."""
-    import os
-
-    if os.environ.get("IS_DEV", "") == "":
-        raise ValueError("This function should not be called in production. Set IS_DEV to enable.")

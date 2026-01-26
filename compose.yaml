@@ -9,9 +9,8 @@ services:
     ports:
       - "80:80"
     environment:
-      IS_DEV: true
       RELOAD: true
-      DATABASE_URL: postgresql://main:main12345@db/main
+      DATABASE_URL: postgresql+asyncpg://main:main12345@db/main
       CACHE_REDIS_HOST: redis
       CACHE_REDIS_PORT: 6379
     depends_on:
