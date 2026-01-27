@@ -2,7 +2,7 @@ from typing import Callable
 from fastapi import APIRouter, Query
 from f1_api.schemas.driver_schema import DriverSchema, DriverOrderField
 from f1_api.schemas.requests import SortOrder
-from f1_api.schemas.responses import PagedResponse
+from f1_api.schemas.responses import PagedResponse, RaceResultResponse
 from f1_api.services.driver_service import DriverService
 
 
@@ -40,7 +40,7 @@ class DriverRouter:
             methods=["GET"],
             summary="Get Driver Results",
             operation_id="getDriverResults",
-            response_model=list[dict],
+            response_model=PagedResponse[RaceResultResponse],
         )
         self.router.add_api_route(
             "/{driver_id}/seasons",
@@ -91,8 +91,32 @@ class DriverRouter:
 
         return DriverSchema.model_validate(driver)
 
-    async def get_driver_results(self, driver_id: str) -> list[dict]:
-        return await self._driver_service.get_driver_results(driver_id=driver_id)
+    async def get_driver_results(
+        self,
+        driver_id: str,
+        page: int = Query(
+            1,
+            ge=1,
+            description="Page number",
+        ),
+        limit: int = Query(
+            100,
+            ge=1,
+            le=100,
+            description="Number of items per page",
+        ),
+    ) -> PagedResponse[RaceResultResponse]:
+        skip = (page - 1) * limit
+        driver_results, total = await self._driver_service.get_driver_results(
+            skip=skip, limit=limit, driver_id=driver_id
+        )
+
+        return PagedResponse[RaceResultResponse].create(
+            data=[RaceResultResponse.model_validate(result) for result in driver_results],
+            page=page,
+            limit=limit,
+            total=total,
+        )
 
     async def get_driver_seasons(self, driver_id: str) -> list[int]:
         driver_seasons = await self._driver_service.get_driver_seasons(driver_id=driver_id)

@@ -1,7 +1,9 @@
 from typing import Sequence
+
+from sqlalchemy import RowMapping
 from f1_api.models.models import Driver, Season
 from f1_api.repositories.driver_repository import DriverRepository
-from f1_api.constants.cache_keys import DRIVERS_PREFIX
+from f1_api.constants.cache_keys import DRIVERS_PREFIX, DRIVERS_RESULTS_PREFIX
 from f1_api.schemas.driver_schema import DriverOrderField
 from f1_api.schemas.requests import SortOrder
 from f1_api.utils import get_cache_key
@@ -41,11 +43,23 @@ class DriverService:
     async def get_driver(self, driver_id: str) -> Driver:
         return await self._get_existing_driver(driver_id)
 
-    async def get_driver_results(self, driver_id: str) -> list[dict]:
-        await self._get_existing_driver(driver_id)
-        results = await self._driver_repository.get_driver_results(driver_id)
+    async def get_driver_results(self, skip: int, limit: int, driver_id: str) -> tuple[Sequence[RowMapping], int]:
+        cache_key = get_cache_key(
+            DRIVERS_RESULTS_PREFIX,
+            driver_id=driver_id,
+            skip=skip,
+            limit=limit,
+        )
+        res = await get_cached(cache_key)
+        if res is not None:
+            return res  # type: ignore
 
-        return results
+        await self._get_existing_driver(driver_id)
+        results, total = await self._driver_repository.get_driver_results(skip=skip, limit=limit, driver_id=driver_id)
+
+        await set_cached(cache_key, (results, total))
+
+        return results, total
 
     async def get_driver_seasons(self, driver_id: str) -> Sequence[Season]:
         await self._get_existing_driver(driver_id)

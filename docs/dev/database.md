@@ -792,6 +792,7 @@ erDiagram
     VARCHAR(100) country_id FK
     INTEGER best_championship_position "nullable"
     INTEGER best_race_result "nullable"
+    INTEGER best_sprint_race_result "nullable"
     INTEGER best_starting_grid_position "nullable"
     VARCHAR(100) full_name
     VARCHAR(100) name
@@ -807,6 +808,8 @@ erDiagram
     INTEGER total_race_laps
     INTEGER total_race_starts
     INTEGER total_race_wins
+    INTEGER total_sprint_race_starts
+    INTEGER total_sprint_race_wins
   }
 
   constructor_chronology {
@@ -842,6 +845,7 @@ erDiagram
     VARCHAR(3) abbreviation
     INTEGER best_championship_position "nullable"
     INTEGER best_race_result "nullable"
+    INTEGER best_sprint_race_result "nullable"
     INTEGER best_starting_grid_position "nullable"
     DATE date_of_birth
     DATE date_of_death "nullable"
@@ -864,6 +868,8 @@ erDiagram
     INTEGER total_race_laps
     INTEGER total_race_starts
     INTEGER total_race_wins
+    INTEGER total_sprint_race_starts
+    INTEGER total_sprint_race_wins
   }
 
   driver_family_relationship {
@@ -901,6 +907,7 @@ erDiagram
     VARCHAR(100) country_id FK
     INTEGER best_championship_position "nullable"
     INTEGER best_race_result "nullable"
+    INTEGER best_sprint_race_result "nullable"
     INTEGER best_starting_grid_position "nullable"
     VARCHAR(100) name
     NUMERIC(8-2) total_championship_points
@@ -914,6 +921,8 @@ erDiagram
     INTEGER total_race_laps
     INTEGER total_race_starts
     INTEGER total_race_wins
+    INTEGER total_sprint_race_starts
+    INTEGER total_sprint_race_wins
   }
 
   entrant {
@@ -1130,12 +1139,12 @@ erDiagram
     VARCHAR(100) grand_prix_id FK
     INTEGER year FK
     VARCHAR(6) circuit_type
-    BOOLEAN constructors_championship_decider "nullable"
+    BOOLEAN constructors_championship_decider
     NUMERIC(6-3) course_length
     DATE date
     VARCHAR(14) direction
     NUMERIC(6-3) distance
-    BOOLEAN drivers_championship_decider "nullable"
+    BOOLEAN drivers_championship_decider
     DATE free_practice_1_date "nullable"
     VARCHAR(5) free_practice_1_time "nullable"
     DATE free_practice_2_date "nullable"
@@ -1174,6 +1183,7 @@ erDiagram
     INTEGER race_id PK,FK
     VARCHAR(100) constructor_id FK
     VARCHAR(100) engine_manufacturer_id FK
+    BOOLEAN championship_won
     NUMERIC(8-2) points
     INTEGER position_number "nullable"
     VARCHAR(4) position_text
@@ -1258,6 +1268,7 @@ erDiagram
     INTEGER position_display_order PK
     INTEGER race_id PK,FK
     VARCHAR(100) driver_id FK
+    BOOLEAN championship_won
     NUMERIC(8-2) points
     INTEGER position_number "nullable"
     VARCHAR(4) position_text
@@ -1307,6 +1318,7 @@ erDiagram
     VARCHAR(100) constructor_id PK,FK
     INTEGER year PK,FK
     INTEGER best_race_result "nullable"
+    INTEGER best_sprint_race_result "nullable"
     INTEGER best_starting_grid_position "nullable"
     INTEGER position_number "nullable"
     VARCHAR(4) position_text "nullable"
@@ -1320,6 +1332,8 @@ erDiagram
     INTEGER total_race_laps
     INTEGER total_race_starts
     INTEGER total_race_wins
+    INTEGER total_sprint_race_starts
+    INTEGER total_sprint_race_wins
   }
 
   season_constructor_standing {
@@ -1327,6 +1341,7 @@ erDiagram
     INTEGER year PK,FK
     VARCHAR(100) constructor_id FK
     VARCHAR(100) engine_manufacturer_id FK
+    BOOLEAN championship_won
     NUMERIC(8-2) points
     INTEGER position_number "nullable"
     VARCHAR(4) position_text
@@ -1336,6 +1351,7 @@ erDiagram
     VARCHAR(100) driver_id PK,FK
     INTEGER year PK,FK
     INTEGER best_race_result "nullable"
+    INTEGER best_sprint_race_result "nullable"
     INTEGER best_starting_grid_position "nullable"
     INTEGER position_number "nullable"
     VARCHAR(4) position_text "nullable"
@@ -1349,12 +1365,15 @@ erDiagram
     INTEGER total_race_laps
     INTEGER total_race_starts
     INTEGER total_race_wins
+    INTEGER total_sprint_race_starts
+    INTEGER total_sprint_race_wins
   }
 
   season_driver_standing {
     INTEGER position_display_order PK
     INTEGER year PK,FK
     VARCHAR(100) driver_id FK
+    BOOLEAN championship_won
     NUMERIC(8-2) points
     INTEGER position_number "nullable"
     VARCHAR(4) position_text
@@ -1364,6 +1383,7 @@ erDiagram
     VARCHAR(100) engine_manufacturer_id PK,FK
     INTEGER year PK,FK
     INTEGER best_race_result "nullable"
+    INTEGER best_sprint_race_result "nullable"
     INTEGER best_starting_grid_position "nullable"
     INTEGER position_number "nullable"
     VARCHAR(4) position_text "nullable"
@@ -1376,6 +1396,8 @@ erDiagram
     INTEGER total_race_laps
     INTEGER total_race_starts
     INTEGER total_race_wins
+    INTEGER total_sprint_race_starts
+    INTEGER total_sprint_race_wins
   }
 
   season_entrant {
@@ -1430,6 +1452,7 @@ erDiagram
     VARCHAR(100) tyre_manufacturer_id PK,FK
     INTEGER year PK,FK
     INTEGER best_race_result "nullable"
+    INTEGER best_sprint_race_result "nullable"
     INTEGER best_starting_grid_position "nullable"
     INTEGER total_fastest_laps
     INTEGER total_podium_races
@@ -1439,6 +1462,8 @@ erDiagram
     INTEGER total_race_laps
     INTEGER total_race_starts
     INTEGER total_race_wins
+    INTEGER total_sprint_race_starts
+    INTEGER total_sprint_race_wins
   }
 
   sprint_qualifying_result {
@@ -1535,6 +1560,7 @@ erDiagram
     VARCHAR(100) id PK
     VARCHAR(100) country_id FK
     INTEGER best_race_result "nullable"
+    INTEGER best_sprint_race_result "nullable"
     INTEGER best_starting_grid_position "nullable"
     VARCHAR(100) name
     INTEGER total_fastest_laps
@@ -1545,6 +1571,8 @@ erDiagram
     INTEGER total_race_laps
     INTEGER total_race_starts
     INTEGER total_race_wins
+    INTEGER total_sprint_race_starts
+    INTEGER total_sprint_race_wins
   }
 
   warming_up_result {

@@ -32,4 +32,4 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./f1-db-dump.sql:/docker-entrypoint-initdb.d/f1-db-dump.sql
+      - ./f1db-sql-postgresql.sql:/docker-entrypoint-initdb.d/f1db-sql-postgresql.sql

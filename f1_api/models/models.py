@@ -599,9 +599,12 @@ class Constructor(Base):
     total_championship_points: Mapped[decimal.Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     total_pole_positions: Mapped[int] = mapped_column(Integer, nullable=False)
     total_fastest_laps: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_starts: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_wins: Mapped[int] = mapped_column(Integer, nullable=False)
     best_championship_position: Mapped[Optional[int]] = mapped_column(Integer)
     best_starting_grid_position: Mapped[Optional[int]] = mapped_column(Integer)
     best_race_result: Mapped[Optional[int]] = mapped_column(Integer)
+    best_sprint_race_result: Mapped[Optional[int]] = mapped_column(Integer)
 
     country: Mapped["Country"] = relationship("Country", back_populates="constructor")
     chassis: Mapped[list["Chassis"]] = relationship("Chassis", back_populates="constructor")
@@ -687,6 +690,8 @@ class Driver(Base):
     total_championship_points: Mapped[decimal.Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     total_pole_positions: Mapped[int] = mapped_column(Integer, nullable=False)
     total_fastest_laps: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_starts: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_wins: Mapped[int] = mapped_column(Integer, nullable=False)
     total_driver_of_the_day: Mapped[int] = mapped_column(Integer, nullable=False)
     total_grand_slams: Mapped[int] = mapped_column(Integer, nullable=False)
     permanent_number: Mapped[Optional[str]] = mapped_column(String(2))
@@ -695,6 +700,7 @@ class Driver(Base):
     best_championship_position: Mapped[Optional[int]] = mapped_column(Integer)
     best_starting_grid_position: Mapped[Optional[int]] = mapped_column(Integer)
     best_race_result: Mapped[Optional[int]] = mapped_column(Integer)
+    best_sprint_race_result: Mapped[Optional[int]] = mapped_column(Integer)
 
     country_of_birth_country: Mapped["Country"] = relationship(
         "Country", foreign_keys=[country_of_birth_country_id], back_populates="driver"
@@ -749,9 +755,12 @@ class EngineManufacturer(Base):
     total_championship_points: Mapped[decimal.Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     total_pole_positions: Mapped[int] = mapped_column(Integer, nullable=False)
     total_fastest_laps: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_starts: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_wins: Mapped[int] = mapped_column(Integer, nullable=False)
     best_championship_position: Mapped[Optional[int]] = mapped_column(Integer)
     best_starting_grid_position: Mapped[Optional[int]] = mapped_column(Integer)
     best_race_result: Mapped[Optional[int]] = mapped_column(Integer)
+    best_sprint_race_result: Mapped[Optional[int]] = mapped_column(Integer)
 
     country: Mapped["Country"] = relationship("Country", back_populates="engine_manufacturer")
     engine: Mapped[list["Engine"]] = relationship("Engine", back_populates="engine_manufacturer")
@@ -847,8 +856,11 @@ class TyreManufacturer(Base):
     total_podium_races: Mapped[int] = mapped_column(Integer, nullable=False)
     total_pole_positions: Mapped[int] = mapped_column(Integer, nullable=False)
     total_fastest_laps: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_starts: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_wins: Mapped[int] = mapped_column(Integer, nullable=False)
     best_starting_grid_position: Mapped[Optional[int]] = mapped_column(Integer)
     best_race_result: Mapped[Optional[int]] = mapped_column(Integer)
+    best_sprint_race_result: Mapped[Optional[int]] = mapped_column(Integer)
 
     country: Mapped["Country"] = relationship("Country", back_populates="tyre_manufacturer")
     season_entrant_tyre_manufacturer: Mapped[list["SeasonEntrantTyreManufacturer"]] = relationship(
@@ -1007,12 +1019,12 @@ class Race(Base):
     turns: Mapped[int] = mapped_column(Integer, nullable=False)
     laps: Mapped[int] = mapped_column(Integer, nullable=False)
     distance: Mapped[decimal.Decimal] = mapped_column(Numeric(6, 3), nullable=False)
+    drivers_championship_decider: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    constructors_championship_decider: Mapped[bool] = mapped_column(Boolean, nullable=False)
     time: Mapped[Optional[str]] = mapped_column(String(5))
     sprint_qualifying_format: Mapped[Optional[str]] = mapped_column(String(20))
     scheduled_laps: Mapped[Optional[int]] = mapped_column(Integer)
     scheduled_distance: Mapped[Optional[decimal.Decimal]] = mapped_column(Numeric(6, 3))
-    drivers_championship_decider: Mapped[Optional[bool]] = mapped_column(Boolean)
-    constructors_championship_decider: Mapped[Optional[bool]] = mapped_column(Boolean)
     pre_qualifying_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
     pre_qualifying_time: Mapped[Optional[str]] = mapped_column(String(5))
     free_practice_1_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
@@ -1068,10 +1080,13 @@ class SeasonConstructor(Base):
     total_points: Mapped[decimal.Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     total_pole_positions: Mapped[int] = mapped_column(Integer, nullable=False)
     total_fastest_laps: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_starts: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_wins: Mapped[int] = mapped_column(Integer, nullable=False)
     position_number: Mapped[Optional[int]] = mapped_column(Integer)
     position_text: Mapped[Optional[str]] = mapped_column(String(4))
     best_starting_grid_position: Mapped[Optional[int]] = mapped_column(Integer)
     best_race_result: Mapped[Optional[int]] = mapped_column(Integer)
+    best_sprint_race_result: Mapped[Optional[int]] = mapped_column(Integer)
 
     constructor: Mapped["Constructor"] = relationship("Constructor", back_populates="season_constructor")
     season: Mapped["Season"] = relationship("Season", back_populates="season_constructor")
@@ -1104,6 +1119,7 @@ class SeasonConstructorStanding(Base):
     constructor_id: Mapped[str] = mapped_column(String(100), nullable=False)
     engine_manufacturer_id: Mapped[str] = mapped_column(String(100), nullable=False)
     points: Mapped[decimal.Decimal] = mapped_column(Numeric(8, 2), nullable=False)
+    championship_won: Mapped[bool] = mapped_column(Boolean, nullable=False)
     position_number: Mapped[Optional[int]] = mapped_column(Integer)
 
     constructor: Mapped["Constructor"] = relationship("Constructor", back_populates="season_constructor_standing")
@@ -1133,12 +1149,15 @@ class SeasonDriver(Base):
     total_points: Mapped[decimal.Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     total_pole_positions: Mapped[int] = mapped_column(Integer, nullable=False)
     total_fastest_laps: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_starts: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_wins: Mapped[int] = mapped_column(Integer, nullable=False)
     total_driver_of_the_day: Mapped[int] = mapped_column(Integer, nullable=False)
     total_grand_slams: Mapped[int] = mapped_column(Integer, nullable=False)
     position_number: Mapped[Optional[int]] = mapped_column(Integer)
     position_text: Mapped[Optional[str]] = mapped_column(String(4))
     best_starting_grid_position: Mapped[Optional[int]] = mapped_column(Integer)
     best_race_result: Mapped[Optional[int]] = mapped_column(Integer)
+    best_sprint_race_result: Mapped[Optional[int]] = mapped_column(Integer)
 
     driver: Mapped["Driver"] = relationship("Driver", back_populates="season_driver")
     season: Mapped["Season"] = relationship("Season", back_populates="season_driver")
@@ -1162,6 +1181,7 @@ class SeasonDriverStanding(Base):
     position_text: Mapped[str] = mapped_column(String(4), nullable=False)
     driver_id: Mapped[str] = mapped_column(String(100), nullable=False)
     points: Mapped[decimal.Decimal] = mapped_column(Numeric(8, 2), nullable=False)
+    championship_won: Mapped[bool] = mapped_column(Boolean, nullable=False)
     position_number: Mapped[Optional[int]] = mapped_column(Integer)
 
     driver: Mapped["Driver"] = relationship("Driver", back_populates="season_driver_standing")
@@ -1193,10 +1213,13 @@ class SeasonEngineManufacturer(Base):
     total_points: Mapped[decimal.Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     total_pole_positions: Mapped[int] = mapped_column(Integer, nullable=False)
     total_fastest_laps: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_starts: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_wins: Mapped[int] = mapped_column(Integer, nullable=False)
     position_number: Mapped[Optional[int]] = mapped_column(Integer)
     position_text: Mapped[Optional[str]] = mapped_column(String(4))
     best_starting_grid_position: Mapped[Optional[int]] = mapped_column(Integer)
     best_race_result: Mapped[Optional[int]] = mapped_column(Integer)
+    best_sprint_race_result: Mapped[Optional[int]] = mapped_column(Integer)
 
     engine_manufacturer: Mapped["EngineManufacturer"] = relationship(
         "EngineManufacturer", back_populates="season_engine_manufacturer"
@@ -1358,8 +1381,11 @@ class SeasonTyreManufacturer(Base):
     total_podium_races: Mapped[int] = mapped_column(Integer, nullable=False)
     total_pole_positions: Mapped[int] = mapped_column(Integer, nullable=False)
     total_fastest_laps: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_starts: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sprint_race_wins: Mapped[int] = mapped_column(Integer, nullable=False)
     best_starting_grid_position: Mapped[Optional[int]] = mapped_column(Integer)
     best_race_result: Mapped[Optional[int]] = mapped_column(Integer)
+    best_sprint_race_result: Mapped[Optional[int]] = mapped_column(Integer)
 
     tyre_manufacturer: Mapped["TyreManufacturer"] = relationship(
         "TyreManufacturer", back_populates="season_tyre_manufacturer"
@@ -1394,6 +1420,7 @@ class RaceConstructorStanding(Base):
     constructor_id: Mapped[str] = mapped_column(String(100), nullable=False)
     engine_manufacturer_id: Mapped[str] = mapped_column(String(100), nullable=False)
     points: Mapped[decimal.Decimal] = mapped_column(Numeric(8, 2), nullable=False)
+    championship_won: Mapped[bool] = mapped_column(Boolean, nullable=False)
     position_number: Mapped[Optional[int]] = mapped_column(Integer)
     positions_gained: Mapped[Optional[int]] = mapped_column(Integer)
 
@@ -1526,6 +1553,7 @@ class RaceDriverStanding(Base):
     position_text: Mapped[str] = mapped_column(String(4), nullable=False)
     driver_id: Mapped[str] = mapped_column(String(100), nullable=False)
     points: Mapped[decimal.Decimal] = mapped_column(Numeric(8, 2), nullable=False)
+    championship_won: Mapped[bool] = mapped_column(Boolean, nullable=False)
     position_number: Mapped[Optional[int]] = mapped_column(Integer)
     positions_gained: Mapped[Optional[int]] = mapped_column(Integer)
 
