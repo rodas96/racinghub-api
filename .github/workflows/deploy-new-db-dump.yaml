@@ -99,22 +99,58 @@ jobs:
 
             echo "✅ Database schema validated ($TABLE_COUNT tables found)"
 
-            echo "🔄 Updating docker-compose to point to new database..."
-            cp docker-compose.yml docker-compose.yml.backup
-            sed -i 's/container_name: f1-db$/container_name: f1-db-new/g' docker-compose.yml
-            sed -i 's/@f1-db\//@f1-db-new\//g' docker-compose.yml
+            echo "🔄 Swapping databases..."
 
-            echo "🚀 Restarting API with new database..."
-            docker compose up -d f1-api
+            # Stop the API
+            echo "🛑 Stopping API..."
+            docker compose stop f1-api
+
+            # Stop old database
+            echo "🛑 Stopping old database..."
+            docker compose stop f1-db
+
+            # Rename old database to backup
+            echo "📦 Backing up old database container..."
+            docker rename f1-db f1-db-old || true
+
+            # Rename new database to production name
+            echo "🔄 Promoting new database to production..."
+            docker rename f1-db-new f1-db
+
+            # Update the network alias by removing and re-adding to network
+            echo "🔌 Updating network configuration..."
+            docker network disconnect f1api-deploy_internal f1-db || true
+            docker network connect --alias f1-db f1api-deploy_internal f1-db
+
+            echo "🚀 Starting API with new database..."
+            docker compose start f1-api
 
             if [ $? -ne 0 ]; then
-              echo "❌ Failed to restart API"
+              echo "❌ Failed to start API"
               echo "🔄 Rolling back..."
-              mv docker-compose.yml.backup docker-compose.yml
-              docker compose up -d f1-api
+              
+              # Stop API
+              docker compose stop f1-api
+              
+              # Swap databases back
+              docker rename f1-db f1-db-new
+              docker rename f1-db-old f1-db
+              
+              # Fix network
+              docker network disconnect f1api-deploy_internal f1-db || true
+              docker network connect --alias f1-db f1api-deploy_internal f1-db
+              
+              # Start API with old database
+              docker compose start f1-api
+              
+              # Remove new database
               docker stop f1-db-new
               docker rm f1-db-new
               rm -f f1-db-dump-new.sql
+              
+              echo "✅ Rolled back to old database"
+              echo "Current status:"
+              docker compose ps
               exit 1
             fi
 
@@ -137,11 +173,19 @@ jobs:
               echo "❌ API health check failed after multiple attempts"
               echo "🔄 Rolling back to old database..."
               
-              # Revert docker-compose
-              mv docker-compose.yml.backup docker-compose.yml
+              # Stop API
+              docker compose stop f1-api
               
-              # Restart API with old database
-              docker compose up -d f1-api
+              # Swap databases back
+              docker rename f1-db f1-db-new
+              docker rename f1-db-old f1-db
+              
+              # Fix network
+              docker network disconnect f1api-deploy_internal f1-db || true
+              docker network connect --alias f1-db f1api-deploy_internal f1-db
+              
+              # Start API with old database
+              docker compose start f1-api
               
               # Remove new database
               docker stop f1-db-new
@@ -155,25 +199,15 @@ jobs:
             fi
 
             echo "🗑️ Removing old database..."
-            docker stop f1-db || true
-            docker rm f1-db || true
-            docker volume rm f1api-deploy_postgres_data || true
-
-            echo "🔄 Renaming new database to f1-db..."
-            docker stop f1-db-new
-            docker rename f1-db-new f1-db
-
-            echo "🔄 Reverting docker-compose.yml..."
-            mv docker-compose.yml.backup docker-compose.yml
-
-            echo "🚀 Final restart with correct naming..."
-            docker compose up -d
+            docker stop f1-db-old || true
+            docker rm f1-db-old || true
 
             echo "🧹 Cleaning up dump file..."
             rm -f f1-db-dump-new.sql
 
-            echo "🧹 Cleaning up old images..."
+            echo "🧹 Cleaning up old images and volumes..."
             docker image prune -f
+            docker volume prune -f
 
             echo "✅ Database deployment complete!"
 
