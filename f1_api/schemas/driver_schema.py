@@ -1,23 +1,10 @@
-from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import date
 from typing import Optional
 from decimal import Decimal
 
 
-class DriverOrderField(str, Enum):
-    NAME = "name"
-    DATE_OF_BIRTH = "date_of_birth"
-    TOTAL_CHAMPIONSHIP_WINS = "total_championship_wins"
-    TOTAL_CHAMPIONSHIP_POINTS = "total_championship_points"
-    TOTAL_RACE_WINS = "total_race_wins"
-    TOTAL_PODIUMS = "total_podiums"
-    TOTAL_POINTS = "total_points"
-    TOTAL_POLE_POSITIONS = "total_pole_positions"
-    TOTAL_FASTEST_LAPS = "total_fastest_laps"
-
-
-class DriverSchema(BaseModel):
+class DriverResponse(BaseModel):
     id: str
     name: str
     first_name: str
@@ -49,5 +36,60 @@ class DriverSchema(BaseModel):
     best_championship_position: Optional[int] = None
     best_starting_grid_position: Optional[int] = None
     best_race_result: Optional[int] = None
+
+    model_config = {"from_attributes": True}
+
+
+class DriverRaceResultResponse(BaseModel):
+    """Complete race result for a driver including race context."""
+
+    # Race Information
+    race_id: int
+    race_year: int
+    race_round: int
+    race_date: date
+    race_name: str = Field(..., description="Official race name")
+    grand_prix_name: str = Field(..., description="Grand Prix name (e.g., 'Australian Grand Prix')")
+    circuit_name: str = Field(..., description="Circuit name")
+    circuit_location: str | bool = Field(..., description="City/Country")
+
+    # Result Details
+    position_display_order: int
+    position: int | None = Field(None, description="Final classification position (null if DNF/DSQ)")
+
+    driver_number: str
+    constructor_name: str = Field(..., description="Team name")
+
+    # Race Performance
+    laps: int | None = Field(None, description="Laps completed")
+    time: str | None = Field(None, description="Race time (winner) or gap")
+    time_millis: int | None = Field(None, description="Race time in milliseconds")
+    gap: str | None = Field(None, description="Gap to leader")
+    gap_millis: int | None = Field(None, description="Gap in milliseconds")
+    gap_laps: int | None = Field(None, description="Laps behind leader")
+    interval: str | None = Field(None, description="Interval to car ahead")
+    interval_millis: int | None = Field(None, description="Interval in milliseconds")
+
+    # Penalties & Retirement
+    time_penalty: str | None = Field(None, description="Time penalty applied")
+    time_penalty_millis: int | None = Field(None, description="Penalty in milliseconds")
+    reason_retired: str | None = Field(None, description="DNF reason if applicable")
+
+    # Points & Achievements
+    points: Decimal | None = Field(None, description="Championship points earned")
+    pole_position: bool = Field(False, description="Started from pole")
+    fastest_lap: bool | None = Field(False, description="Set fastest lap")
+    driver_of_the_day: bool | None = Field(False, description="Won driver of the day")
+    grand_slam: bool = Field(False, description="Pole + Win + Fastest Lap + Led every lap")
+
+    # Grid & Qualifying
+    qualification_position: int | None = Field(None, description="Qualifying position")
+    grid_position: int | None = Field(None, description="Starting grid position")
+    positions_gained: int | None = Field(None, description="Positions gained/lost from grid")
+
+    # Strategy
+    pit_stops: int | None = Field(None, description="Number of pit stops")
+    tyre_manufacturer: str | None = Field(None, description="Tyre supplier")
+    engine_manufacturer: str | None = Field(None, description="Engine supplier")
 
     model_config = {"from_attributes": True}

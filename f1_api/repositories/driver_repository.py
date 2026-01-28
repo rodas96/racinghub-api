@@ -13,8 +13,8 @@ from f1_api.models.models import (
     t_race_result,
 )
 from f1_api.repositories.base_repository import BaseRepository
-from f1_api.schemas.driver_schema import DriverOrderField
-from f1_api.schemas.requests import SortOrder
+from f1_api.schemas.shared.enums import DriverOrderField
+from f1_api.schemas.shared.requests import SortOrder
 
 
 class DriverRepository(BaseRepository):
@@ -50,7 +50,7 @@ class DriverRepository(BaseRepository):
 
         return result.scalars().first()
 
-    async def get_driver_results(self, skip: int, limit: int, driver_id: str) -> tuple[Sequence[RowMapping], int]:
+    async def get_driver_races_results(self, skip: int, limit: int, driver_id: str) -> tuple[Sequence[RowMapping], int]:
         """Get all race results for a driver with full race context."""
         query = (
             select(
@@ -65,8 +65,7 @@ class DriverRepository(BaseRepository):
                 Circuit.country.label("circuit_location"),
                 # Result details
                 t_race_result.c.position_display_order,
-                t_race_result.c.position_number,
-                t_race_result.c.position_text,
+                t_race_result.c.position_number.label("position"),
                 t_race_result.c.driver_number,
                 Constructor.name.label("constructor_name"),
                 # Performance
@@ -89,17 +88,13 @@ class DriverRepository(BaseRepository):
                 t_race_result.c.driver_of_the_day,
                 t_race_result.c.grand_slam,
                 # Grid & qualifying
-                t_race_result.c.qualification_position_number,
-                t_race_result.c.qualification_position_text,
-                t_race_result.c.grid_position_number,
-                t_race_result.c.grid_position_text,
+                t_race_result.c.qualification_position_number.label("qualification_position"),
+                t_race_result.c.grid_position_number.label("grid_position"),
                 t_race_result.c.positions_gained,
                 # Strategy
                 t_race_result.c.pit_stops,
                 TyreManufacturer.name.label("tyre_manufacturer"),
                 EngineManufacturer.name.label("engine_manufacturer"),
-                # Additional
-                t_race_result.c.shared_car,
             )
             .join(Race, Race.id == t_race_result.c.race_id)
             .join(GrandPrix, GrandPrix.id == Race.grand_prix_id)
@@ -113,10 +108,11 @@ class DriverRepository(BaseRepository):
             .offset(skip)
             .limit(limit)
         )
-
         count_query = select(func.count()).select_from(t_race_result).where(t_race_result.c.driver_id == driver_id)
+
         result = await self.db.execute(query)
         total = await self.db.scalar(count_query) or 0
+
         return result.mappings().all(), total
 
     async def get_driver_seasons(self, driver_id: str) -> Sequence[Season]:

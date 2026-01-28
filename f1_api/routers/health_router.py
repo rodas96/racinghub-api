@@ -3,7 +3,7 @@ from typing import Callable
 from datetime import datetime, timezone
 from f1_api.prodivers.cache import health_check_cache
 from f1_api.prodivers.db import health_check_db
-from f1_api.schemas.responses import HealthResponse
+from f1_api.schemas.shared.responses import HealthResponse
 
 
 class HealthRouter:
