@@ -6,6 +6,7 @@ from f1_api.models.models import (
     EngineManufacturer,
     GrandPrix,
     Race,
+    RaceData,
     TyreManufacturer,
     t_race_result,
 )
@@ -21,6 +22,21 @@ class RaceRepository(BaseRepository):
         total = (await self._db.execute(total_query)).scalar_one() or 0
 
         return results, total
+
+    async def get_race(self, race_id: int) -> Race | None:
+        query = select(Race).where(Race.id == race_id)
+        result = await self._db.execute(query)
+
+        return result.scalars().first()
+
+    async def get_race_results(self, race_id: int) -> Sequence[RaceData]:
+        query = (
+            select(RaceData)
+            .where(RaceData.race_id == race_id, RaceData.type == "RACE_RESULT")
+            .order_by(RaceData.position_display_order)
+        )
+        res = (await self._db.execute(query)).scalars().all()
+        return res
 
     async def get_driver_races_results(self, skip: int, limit: int, driver_id: str) -> tuple[Sequence[RowMapping], int]:
         """Get all race results for a driver with full race context."""
