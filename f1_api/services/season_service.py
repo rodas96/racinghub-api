@@ -9,14 +9,13 @@ class SeasonService:
     def __init__(self, season_repository: SeasonRepository):
         self._season_repository = season_repository
 
-    async def get_seasons(self, skip: int, limit: int) -> tuple[Sequence[RowMapping], int]:
+    async def get_seasons(self, skip: int, limit: int) -> tuple[list[dict], int]:
         rows, total = await self._season_repository.get_seasons(offset=skip, limit=limit)
 
         return [self._map_season_row(dict(row)) for row in rows], total
 
-    async def get_season(self, year: int) -> RowMapping:
-        await self._get_existing_season(year=year)
-        row = await self._season_repository.get_season(year=year)
+    async def get_season(self, year: int) -> dict:
+        row = await self._get_existing_season(year=year)
 
         return self._map_season_row(dict(row))
 
