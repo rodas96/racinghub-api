@@ -48,13 +48,13 @@ jobs:
             fi
 
             echo "🗄️ Starting new database (f1-db-new)..."
-            docker run -d \
-              --name f1-db-new \
-              --network f1api-deploy_internal \
-              -e POSTGRES_USER=${POSTGRES_USER} \
-              -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
-              -e POSTGRES_DB=${POSTGRES_DB} \
-              -v $(pwd)/f1-db-dump-new.sql:/docker-entrypoint-initdb.d/f1-db-dump.sql:ro \
+            docker run -d \\
+              --name f1-db-new \\
+              --network f1api-deploy_internal \\
+              -e POSTGRES_USER=${POSTGRES_USER} \\
+              -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \\
+              -e POSTGRES_DB=${POSTGRES_DB} \\
+              -v $(pwd)/f1-db-dump-new.sql:/docker-entrypoint-initdb.d/f1-db-dump.sql:ro \\
               postgres:16
 
             if [ $? -ne 0 ]; then
@@ -63,11 +63,11 @@ jobs:
               exit 1
             fi
 
-            echo "⏳ Waiting for new database to initialize..."
+            echo "⏳ Waiting for new database to initialize (this can take 7-8 minutes)..."
             sleep 30
 
-            # Wait until new database is ready (max 5 minutes)
-            TIMEOUT=300
+            # Wait until new database is ready (max 10 minutes for large dumps)
+            TIMEOUT=600
             ELAPSED=0
             until docker exec f1-db-new pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}; do
               if [ $ELAPSED -ge $TIMEOUT ]; then
@@ -79,11 +79,15 @@ jobs:
                 exit 1
               fi
               echo "Waiting for new database... ($ELAPSED/$TIMEOUT seconds)"
-              sleep 5
-              ELAPSED=$((ELAPSED + 5))
+              sleep 10
+              ELAPSED=$((ELAPSED + 10))
             done
 
             echo "✅ New database is ready!"
+
+            # Additional wait to ensure import is complete
+            echo "⏳ Waiting for database import to complete..."
+            sleep 60
 
             echo "🔍 Validating database schema..."
             TABLE_COUNT=$(docker exec f1-db-new psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';")
@@ -128,26 +132,26 @@ jobs:
             if [ $? -ne 0 ]; then
               echo "❌ Failed to start API"
               echo "🔄 Rolling back..."
-              
+
               # Stop API
               docker compose stop f1-api
-              
+
               # Swap databases back
               docker rename f1-db f1-db-new
               docker rename f1-db-old f1-db
-              
+
               # Fix network
               docker network disconnect f1api-deploy_internal f1-db || true
               docker network connect --alias f1-db f1api-deploy_internal f1-db
-              
+
               # Start API with old database
               docker compose start f1-api
-              
+
               # Remove new database
               docker stop f1-db-new
               docker rm f1-db-new
               rm -f f1-db-dump-new.sql
-              
+
               echo "✅ Rolled back to old database"
               echo "Current status:"
               docker compose ps
@@ -160,38 +164,43 @@ jobs:
             echo "🔍 Testing API health..."
             HEALTH_CHECK_PASSED=false
             for i in {1..10}; do
-              if curl -f http://localhost/health > /dev/null 2>&1; then
+              RESPONSE=$(curl -s <http://localhost/health>)
+
+              # Check if response contains "healthy" status
+              if echo "$RESPONSE" | grep -q '"status"[[:space:]]*:[[:space:]]*"healthy"' && \\
+                echo "$RESPONSE" | grep -q '"database"[[:space:]]*:[[:space:]]*"healthy"'; then
                 echo "✅ API health check passed"
+                echo "Response: $RESPONSE"
                 HEALTH_CHECK_PASSED=true
                 break
               fi
-              echo "Attempt $i/10: API not responding yet..."
+              echo "Attempt $i/10: API not healthy yet... Response: $RESPONSE"
               sleep 3
             done
 
             if [ "$HEALTH_CHECK_PASSED" = false ]; then
               echo "❌ API health check failed after multiple attempts"
               echo "🔄 Rolling back to old database..."
-              
+
               # Stop API
               docker compose stop f1-api
-              
+
               # Swap databases back
               docker rename f1-db f1-db-new
               docker rename f1-db-old f1-db
-              
+
               # Fix network
               docker network disconnect f1api-deploy_internal f1-db || true
               docker network connect --alias f1-db f1api-deploy_internal f1-db
-              
+
               # Start API with old database
               docker compose start f1-api
-              
+
               # Remove new database
               docker stop f1-db-new
               docker rm f1-db-new
               rm -f f1-db-dump-new.sql
-              
+
               echo "✅ Rolled back to old database"
               echo "Current status:"
               docker compose ps
@@ -214,23 +223,22 @@ jobs:
             echo "📊 Final status:"
             docker compose ps
 
-      - name: Verify Deployment
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USER }}
-          key: ${{ secrets.DO_SSH_KEY }}
-          script: |
-            cd ~/f1api-deploy
+            uses: appleboy/ssh-action@master
+            with:
+              host: ${{ secrets.DO_HOST }}
+              username: ${{ secrets.DO_USER }}
+              key: ${{ secrets.DO_SSH_KEY }}
+              script: |
+                cd ~/f1api-deploy
 
-            # Source environment variables
-            set -a
-            source .env
-            set +a
+                # Source environment variables
+                set -a
+                source .env
+                set +a
 
-            echo "🔍 Verifying database connection..."
-            docker compose exec -T f1-db psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';"
+                echo "🔍 Verifying database connection..."
+                docker compose exec -T f1-db psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';"
 
-            echo "🌐 Checking API health..."
-            sleep 5
-            curl -f http://localhost/health || echo "⚠️ API health check endpoint not responding"
+                echo "🌐 Checking API health..."
+                sleep 5
+                curl -f http://localhost/health || echo "⚠️ API health check endpoint not responding"
