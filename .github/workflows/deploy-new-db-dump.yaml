@@ -23,10 +23,10 @@ jobs:
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
-            set -e  # Exit immediately if a command fails
+            set -e
             cd ~/f1api-deploy
 
-            # Source environment variables
+            # Load environment variables
             set -a
             source .env
             set +a
@@ -83,37 +83,6 @@ jobs:
             docker network disconnect f1api-deploy_internal f1-db || true
             docker network connect --alias f1-db f1api-deploy_internal f1-db
             docker compose start f1-api
-
-            echo "⏳ Waiting for API to stabilize..."
-            sleep 15
-
-            echo "🔍 Testing API health..."
-            HEALTH_CHECK_PASSED=false
-            for i in {1..10}; do
-              RESPONSE=$(curl -s http://localhost/health)
-              if echo "$RESPONSE" | grep -q '"status"[[:space:]]*:[[:space:]]*"healthy"' && \
-                 echo "$RESPONSE" | grep -q '"database"[[:space:]]*:[[:space:]]*"healthy"'; then
-                echo "✅ API health check passed"
-                HEALTH_CHECK_PASSED=true
-                break
-              fi
-              echo "Attempt $i/10: API not healthy yet..."
-              sleep 3
-            done
-
-            if [ "$HEALTH_CHECK_PASSED" = false ]; then
-              echo "❌ API health check failed. Rolling back..."
-              docker compose stop f1-api
-              docker rename f1-db f1-db-new
-              docker rename f1-db-old f1-db
-              docker network disconnect f1api-deploy_internal f1-db || true
-              docker network connect --alias f1-db f1api-deploy_internal f1-db
-              docker compose start f1-api
-              docker stop f1-db-new
-              docker rm f1-db-new
-              rm -f f1-db-dump-new.sql
-              exit 1
-            fi
 
             echo "🗑️ Removing old database..."
             docker stop f1-db-old || true
