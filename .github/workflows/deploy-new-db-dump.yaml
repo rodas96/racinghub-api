@@ -22,203 +22,109 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
-        script: |
-          cd ~/f1api-deploy
+          script: |
+            set -e  # Exit immediately if a command fails
+            cd ~/f1api-deploy
 
-          # Source environment variables
-          set -a
-          source .env
-          set +a
+            # Source environment variables
+            set -a
+            source .env
+            set +a
 
-          echo "📥 Downloading database dump from f1db..."
-          curl -L -o f1-db-dump-new.sql.gz "${{ github.event.inputs.dump_url }}"
+            echo "📥 Downloading database dump..."
+            curl -L -o f1-db-dump-new.sql.gz "${{ github.event.inputs.dump_url }}"
 
-          if [ $? -ne 0 ]; then
-            echo "❌ Failed to download dump"
-            exit 1
-          fi
+            echo "📦 Extracting dump..."
+            gunzip -f f1-db-dump-new.sql.gz
 
-          echo "📦 Extracting dump..."
-          gunzip -f f1-db-dump-new.sql.gz
+            echo "🗄️ Starting new database (f1-db-new)..."
+            docker run -d \
+              --name f1-db-new \
+              --network f1api-deploy_internal \
+              -e POSTGRES_USER=${POSTGRES_USER} \
+              -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+              -e POSTGRES_DB=${POSTGRES_DB} \
+              -v $(pwd)/f1-db-dump-new.sql:/docker-entrypoint-initdb.d/f1-db-dump.sql:ro \
+              postgres:16
 
-          if [ $? -ne 0 ]; then
-            echo "❌ Failed to extract dump"
-            rm -f f1-db-dump-new.sql.gz
-            exit 1
-          fi
+            echo "⏳ Waiting for new database to initialize..."
+            TIMEOUT=600
+            ELAPSED=0
+            until docker exec f1-db-new pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}; do
+              if [ $ELAPSED -ge $TIMEOUT ]; then
+                echo "❌ New database failed to become ready in time. Rolling back..."
+                docker stop f1-db-new
+                docker rm f1-db-new
+                rm -f f1-db-dump-new.sql
+                exit 1
+              fi
+              echo "Waiting... ($ELAPSED/$TIMEOUT seconds)"
+              sleep 10
+              ELAPSED=$((ELAPSED + 10))
+            done
+            sleep 60  # Extra wait for import
 
-          echo "🗄️ Starting new database (f1-db-new)..."
-          docker run -d \
-            --name f1-db-new \
-            --network f1api-deploy_internal \
-            -e POSTGRES_USER=${POSTGRES_USER} \
-            -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
-            -e POSTGRES_DB=${POSTGRES_DB} \
-            -v $(pwd)/f1-db-dump-new.sql:/docker-entrypoint-initdb.d/f1-db-dump.sql:ro \
-            postgres:16
-
-          if [ $? -ne 0 ]; then
-            echo "❌ Failed to start new database"
-            rm -f f1-db-dump-new.sql
-            exit 1
-          fi
-
-          echo "⏳ Waiting for new database to initialize (this can take 7-8 minutes)..."
-          sleep 30
-
-          # Wait until new database is ready (max 10 minutes for large dumps)
-          TIMEOUT=600
-          ELAPSED=0
-          until docker exec f1-db-new pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}; do
-            if [ $ELAPSED -ge $TIMEOUT ]; then
-              echo "❌ New database failed to become ready in time"
-              echo "🔄 Rolling back - removing new database..."
+            echo "🔍 Validating database schema..."
+            TABLE_COUNT=$(docker exec f1-db-new psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -t -c \
+              "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';")
+            if [ "$TABLE_COUNT" -lt 5 ]; then
+              echo "❌ Validation failed: $TABLE_COUNT tables found. Rolling back..."
               docker stop f1-db-new
               docker rm f1-db-new
               rm -f f1-db-dump-new.sql
               exit 1
             fi
-            echo "Waiting for new database... ($ELAPSED/$TIMEOUT seconds)"
-            sleep 10
-            ELAPSED=$((ELAPSED + 10))
-          done
+            echo "✅ Database schema validated ($TABLE_COUNT tables)"
 
-          echo "✅ New database is ready!"
-
-          # Additional wait to ensure import is complete
-          echo "⏳ Waiting for database import to complete..."
-          sleep 60
-
-          echo "🔍 Validating database schema..."
-          TABLE_COUNT=$(docker exec f1-db-new psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';")
-
-          if [ "$TABLE_COUNT" -lt 5 ]; then
-            echo "❌ Database validation failed - insufficient tables found: $TABLE_COUNT"
-            echo "🔄 Rolling back - removing new database..."
-            docker stop f1-db-new
-            docker rm f1-db-new
-            rm -f f1-db-dump-new.sql
-            exit 1
-          fi
-
-          echo "✅ Database schema validated ($TABLE_COUNT tables found)"
-
-          echo "🔄 Swapping databases..."
-
-          # Stop the API
-          echo "🛑 Stopping API..."
-          docker compose stop f1-api
-
-          # Stop old database
-          echo "🛑 Stopping old database..."
-          docker compose stop f1-db
-
-          # Rename old database to backup
-          echo "📦 Backing up old database container..."
-          docker rename f1-db f1-db-old || true
-
-          # Rename new database to production name
-          echo "🔄 Promoting new database to production..."
-          docker rename f1-db-new f1-db
-
-          # Update the network alias by removing and re-adding to network
-          echo "🔌 Updating network configuration..."
-          docker network disconnect f1api-deploy_internal f1-db || true
-          docker network connect --alias f1-db f1api-deploy_internal f1-db
-
-          echo "🚀 Starting API with new database..."
-          docker compose start f1-api
-
-          if [ $? -ne 0 ]; then
-            echo "❌ Failed to start API"
-            echo "🔄 Rolling back..."
-
-            # Stop API
-            docker compose stop f1-api
-
-            # Swap databases back
-            docker rename f1-db f1-db-new
-            docker rename f1-db-old f1-db
-
-            # Fix network
+            echo "🔄 Swapping databases..."
+            docker compose stop f1-api f1-db || true
+            docker rename f1-db f1-db-old || true
+            docker rename f1-db-new f1-db
             docker network disconnect f1api-deploy_internal f1-db || true
             docker network connect --alias f1-db f1api-deploy_internal f1-db
-
-            # Start API with old database
             docker compose start f1-api
 
-            # Remove new database
-            docker stop f1-db-new
-            docker rm f1-db-new
-            rm -f f1-db-dump-new.sql
+            echo "⏳ Waiting for API to stabilize..."
+            sleep 15
 
-            echo "✅ Rolled back to old database"
-            echo "Current status:"
-            docker compose ps
-            exit 1
-          fi
+            echo "🔍 Testing API health..."
+            HEALTH_CHECK_PASSED=false
+            for i in {1..10}; do
+              RESPONSE=$(curl -s http://localhost/health)
+              if echo "$RESPONSE" | grep -q '"status"[[:space:]]*:[[:space:]]*"healthy"' && \
+                 echo "$RESPONSE" | grep -q '"database"[[:space:]]*:[[:space:]]*"healthy"'; then
+                echo "✅ API health check passed"
+                HEALTH_CHECK_PASSED=true
+                break
+              fi
+              echo "Attempt $i/10: API not healthy yet..."
+              sleep 3
+            done
 
-          echo "⏳ Waiting for API to stabilize..."
-          sleep 15
-
-          echo "🔍 Testing API health..."
-          HEALTH_CHECK_PASSED=false
-          for i in {1..10}; do
-            RESPONSE=$(curl -s <http://localhost/health>)
-
-            # Check if response contains "healthy" status
-            if echo "$RESPONSE" | grep -q '"status"[[:space:]]*:[[:space:]]*"healthy"' && \\
-              echo "$RESPONSE" | grep -q '"database"[[:space:]]*:[[:space:]]*"healthy"'; then
-              echo "✅ API health check passed"
-              echo "Response: $RESPONSE"
-              HEALTH_CHECK_PASSED=true
-              break
+            if [ "$HEALTH_CHECK_PASSED" = false ]; then
+              echo "❌ API health check failed. Rolling back..."
+              docker compose stop f1-api
+              docker rename f1-db f1-db-new
+              docker rename f1-db-old f1-db
+              docker network disconnect f1api-deploy_internal f1-db || true
+              docker network connect --alias f1-db f1api-deploy_internal f1-db
+              docker compose start f1-api
+              docker stop f1-db-new
+              docker rm f1-db-new
+              rm -f f1-db-dump-new.sql
+              exit 1
             fi
-            echo "Attempt $i/10: API not healthy yet... Response: $RESPONSE"
-            sleep 3
-          done
 
-          if [ "$HEALTH_CHECK_PASSED" = false ]; then
-            echo "❌ API health check failed after multiple attempts"
-            echo "🔄 Rolling back to old database..."
+            echo "🗑️ Removing old database..."
+            docker stop f1-db-old || true
+            docker rm f1-db-old || true
 
-            # Stop API
-            docker compose stop f1-api
-
-            # Swap databases back
-            docker rename f1-db f1-db-new
-            docker rename f1-db-old f1-db
-
-            # Fix network
-            docker network disconnect f1api-deploy_internal f1-db || true
-            docker network connect --alias f1-db f1api-deploy_internal f1-db
-
-            # Start API with old database
-            docker compose start f1-api
-
-            # Remove new database
-            docker stop f1-db-new
-            docker rm f1-db-new
+            echo "🧹 Cleaning up dump file..."
             rm -f f1-db-dump-new.sql
 
-            echo "✅ Rolled back to old database"
-            echo "Current status:"
+            echo "🧹 Cleaning up old images and volumes..."
+            docker image prune -f
+            docker volume prune -f
+
+            echo "✅ Database deployment complete!"
             docker compose ps
-            exit 1
-          fi
-
-          echo "🗑️ Removing old database..."
-          docker stop f1-db-old || true
-          docker rm f1-db-old || true
-
-          echo "🧹 Cleaning up dump file..."
-          rm -f f1-db-dump-new.sql
-
-          echo "🧹 Cleaning up old images and volumes..."
-          docker image prune -f
-          docker volume prune -f
-
-          echo "✅ Database deployment complete!"
-
-          echo "📊 Final status:"
-          docker compose ps
