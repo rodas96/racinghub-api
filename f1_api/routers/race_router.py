@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from pyparsing import Callable
+from typing import Callable
 
 from f1_api.schemas.shared.responses import PagedResponse
 from f1_api.services.race_service import RaceService
