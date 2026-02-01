@@ -6,6 +6,6 @@ class BaseRepository:
     """Base repository with database session property."""
 
     @property
-    def db(self) -> AsyncSession:
+    def _db(self) -> AsyncSession:
         """Get current request's database session from context."""
         return get_db_from_context()
