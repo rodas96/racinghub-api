@@ -9,6 +9,7 @@ class SeasonChampionResponse(BaseModel):
     driver_name: str
     points: Decimal
     race_wins: int
+    pole_positions: Optional[int] = None
 
 
 class SeasonConstructorChampionResponse(BaseModel):
@@ -16,6 +17,7 @@ class SeasonConstructorChampionResponse(BaseModel):
     constructor_name: str
     points: Decimal
     race_wins: int
+    pole_positions: Optional[int] = None
 
 
 class SeasonConstructorResponse(BaseModel):
@@ -26,6 +28,7 @@ class SeasonConstructorResponse(BaseModel):
     position: Optional[int] = None
     points: Optional[Decimal] = None
     race_wins: Optional[int] = None
+    pole_positions: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
 
