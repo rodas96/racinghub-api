@@ -1,7 +1,12 @@
 from typing import Sequence
 from f1_api.repositories.base_repository import BaseRepository
 from f1_api.models.models import (
+    Circuit,
+    Constructor,
+    EngineManufacturer,
+    GrandPrix,
     Race,
+    TyreManufacturer,
     t_race_result,
     t_qualifying_result,
 )
