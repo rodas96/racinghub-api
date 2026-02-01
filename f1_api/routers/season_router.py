@@ -1,6 +1,5 @@
 from typing import Callable
 from fastapi import APIRouter, Query
-from f1_api.models.models import Season
 from f1_api.schemas.season_schema import SeasonResponse
 from f1_api.schemas.shared.responses import PagedResponse
 from f1_api.services.season_service import SeasonService

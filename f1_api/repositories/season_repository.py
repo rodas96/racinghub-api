@@ -1,10 +1,15 @@
-from sqlalchemy import func, select, text
-from f1_api.models.models import Season
+from typing import Sequence
+from sqlalchemy import RowMapping, func, select, text
+from f1_api.models.models import (
+    Season,
+    SeasonDriver,
+    SeasonDriverStanding,
+)
 from f1_api.repositories.base_repository import BaseRepository
 
 
 class SeasonRepository(BaseRepository):
-    async def get_seasons(self, offset: int, limit: int) -> tuple[list[dict], int]:
+    async def get_seasons(self, offset: int, limit: int) -> tuple[Sequence[RowMapping], int]:
         query = text("""
                 SELECT 
                     s.year,
@@ -26,7 +31,8 @@ class SeasonRepository(BaseRepository):
                     champ_scs.points as constructor_champion_points,
                     champ_sc.total_race_wins as constructor_champion_race_wins,
                     
-                    -- Constructors
+                -- Constructors
+                COALESCE(
                     json_agg(DISTINCT jsonb_build_object(
                         'id', c.id,
                         'name', c.name,
@@ -35,9 +41,12 @@ class SeasonRepository(BaseRepository):
                         'position', scs.position_number,
                         'points', scs.points,
                         'race_wins', sc.total_race_wins
-                    )) FILTER (WHERE c.id IS NOT NULL) as constructors,
-                    
-                    -- Drivers
+                    )) FILTER (WHERE c.id IS NOT NULL),
+                    '[]'
+                ) as constructors,
+
+                -- Drivers
+                COALESCE(
                     json_agg(DISTINCT jsonb_build_object(
                         'id', d.id,
                         'name', d.name,
@@ -47,26 +56,35 @@ class SeasonRepository(BaseRepository):
                         'points', sds.points,
                         'race_wins', sd.total_race_wins,
                         'pole_positions', sd.total_pole_positions
-                    )) FILTER (WHERE d.id IS NOT NULL) as drivers,
-                    
-                    -- Engine manufacturers
+                    )) FILTER (WHERE d.id IS NOT NULL),
+                    '[]'
+                ) as drivers,
+
+                -- Engine manufacturers
+                COALESCE(
                     json_agg(DISTINCT jsonb_build_object(
                         'id', em_sum.id,
                         'name', em_sum.name,
                         'country_code', em_country.alpha2_code,
                         'total_points', sem.total_points,
                         'total_wins', sem.total_race_wins
-                    )) FILTER (WHERE em_sum.id IS NOT NULL) as engine_manufacturers,
-                    
-                    -- Tyre manufacturers
+                    )) FILTER (WHERE em_sum.id IS NOT NULL),
+                    '[]'
+                ) as engine_manufacturers,
+
+                -- Tyre manufacturers
+                COALESCE(
                     json_agg(DISTINCT jsonb_build_object(
                         'id', tm.id,
                         'name', tm.name,
                         'country_code', tm_country.alpha2_code,
                         'total_wins', stm.total_race_wins
-                    )) FILTER (WHERE tm.id IS NOT NULL) as tyre_manufacturers,
-                    
-                    -- Races
+                    )) FILTER (WHERE tm.id IS NOT NULL),
+                    '[]'
+                ) as tyre_manufacturers,
+
+                -- Races
+                COALESCE(
                     json_agg(DISTINCT jsonb_build_object(
                         'id', r.id,
                         'round', r.round,
@@ -76,7 +94,10 @@ class SeasonRepository(BaseRepository):
                         'country_code', circ_country.alpha2_code,
                         'laps', r.laps,
                         'distance', r.distance
-                    )) FILTER (WHERE r.id IS NOT NULL) as races
+                    )) FILTER (WHERE r.id IS NOT NULL),
+                    '[]'
+                ) as races
+
 
                 FROM season s
                 
@@ -130,35 +151,32 @@ class SeasonRepository(BaseRepository):
         results = (await self._db.execute(query, {"limit": limit, "offset": offset})).mappings().all()
         total = await self._db.scalar(count_query) or 0
 
-        seasons = [
-            {
-                "year": row["year"],
-                "total_races": row["total_races"],
-                "total_constructors": row["total_constructors"],
-                "total_drivers": row["total_drivers"],
-                "champion": {
-                    "driver_id": row["champion_driver_id"],
-                    "driver_name": row["champion_driver_name"],
-                    "points": row["champion_points"],
-                    "race_wins": row["champion_race_wins"],
-                }
-                if row["champion_driver_id"]
-                else None,
-                "constructor_champion": {
-                    "constructor_id": row["constructor_champion_id"],
-                    "constructor_name": row["constructor_champion_name"],
-                    "points": row["constructor_champion_points"],
-                    "race_wins": row["constructor_champion_race_wins"],
-                }
-                if row["constructor_champion_id"]
-                else None,
-                "constructors": row["constructors"] or [],
-                "drivers": row["drivers"] or [],
-                "engine_manufacturers": row["engine_manufacturers"] or [],
-                "tyre_manufacturers": row["tyre_manufacturers"] or [],
-                "races": row["races"] or [],
-            }
-            for row in results
-        ]
+        return results, total
 
-        return seasons, total
+    async def get_driver_seasons(self, driver_id: str) -> Sequence[RowMapping]:
+        query = (
+            select(
+                SeasonDriverStanding.year.label("year"),
+                SeasonDriverStanding.position_number.label("position"),
+                SeasonDriverStanding.points.label("points"),
+                SeasonDriver.total_race_wins.label("race_wins"),
+                SeasonDriver.total_pole_positions.label("pole_positions"),
+            )
+            .join(
+                SeasonDriver,
+                (SeasonDriver.year == SeasonDriverStanding.year)
+                & (SeasonDriver.driver_id == SeasonDriverStanding.driver_id),
+            )
+            .where(SeasonDriverStanding.driver_id == driver_id)
+            .group_by(
+                SeasonDriverStanding.year,
+                SeasonDriverStanding.position_number,
+                SeasonDriverStanding.points,
+                SeasonDriver.total_race_wins,
+                SeasonDriver.total_pole_positions,
+            )
+            .order_by(SeasonDriverStanding.year.desc())
+        )
+
+        results = (await self._db.execute(query)).mappings().all()
+        return results

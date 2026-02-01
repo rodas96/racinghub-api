@@ -25,13 +25,13 @@ class RouterFactory:
         """Build and return a list of APIRouters for the application."""
 
         driver_repository = DriverRepository()
-        driver_service = DriverService(driver_repository)
-        driver_router = DriverRouter(driver_service, factory=self.build)
-
         season_repository = SeasonRepository()
-        season_service = SeasonService(season_repository)
-        season_router = SeasonRouter(season_service, factory=self.build)
 
+        driver_service = DriverService(driver_repository, season_repository)
+        season_service = SeasonService(season_repository)
+
+        season_router = SeasonRouter(season_service, factory=self.build)
+        driver_router = DriverRouter(driver_service, factory=self.build)
         health_router = HealthRouter(factory=self.build)
 
         return [

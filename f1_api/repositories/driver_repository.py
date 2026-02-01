@@ -7,8 +7,6 @@ from f1_api.models.models import (
     EngineManufacturer,
     GrandPrix,
     Race,
-    Season,
-    SeasonDriver,
     TyreManufacturer,
     t_race_result,
 )
@@ -36,17 +34,17 @@ class DriverRepository(BaseRepository):
 
             query = query.order_by(order_column)
 
-        result = await self.db.execute(query)
+        result = await self._db.execute(query)
         drivers = result.scalars().all()
 
         count_query = select(func.count()).select_from(Driver)
-        total = await self.db.scalar(count_query) or 0
+        total = await self._db.scalar(count_query) or 0
 
         return drivers, total
 
     async def get_driver_by_id(self, driver_id: str) -> Driver | None:
         query = select(Driver).where(Driver.id == driver_id)
-        result = await self.db.execute(query)
+        result = await self._db.execute(query)
 
         return result.scalars().first()
 
@@ -64,7 +62,6 @@ class DriverRepository(BaseRepository):
                 Circuit.name.label("circuit_name"),
                 Circuit.country.label("circuit_location"),
                 # Result details
-                t_race_result.c.position_display_order,
                 t_race_result.c.position_number.label("position"),
                 t_race_result.c.driver_number,
                 Constructor.name.label("constructor_name"),
@@ -110,15 +107,7 @@ class DriverRepository(BaseRepository):
         )
         count_query = select(func.count()).select_from(t_race_result).where(t_race_result.c.driver_id == driver_id)
 
-        result = await self.db.execute(query)
-        total = await self.db.scalar(count_query) or 0
+        result = await self._db.execute(query)
+        total = await self._db.scalar(count_query) or 0
 
         return result.mappings().all(), total
-
-    async def get_driver_seasons(self, driver_id: str) -> Sequence[Season]:
-        query = select(Season).join(SeasonDriver).where(SeasonDriver.driver_id == driver_id).order_by(Season.year)
-
-        result = await self.db.execute(query)
-        seasons = result.scalars().all()
-
-        return seasons

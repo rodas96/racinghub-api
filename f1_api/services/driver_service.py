@@ -1,9 +1,10 @@
 from typing import Sequence
 
 from sqlalchemy import RowMapping
-from f1_api.models.models import Driver, Season
+from f1_api.models.models import Driver
 from f1_api.repositories.driver_repository import DriverRepository
 from f1_api.constants.cache_keys import DRIVERS_PREFIX, DRIVERS_RESULTS_PREFIX
+from f1_api.repositories.season_repository import SeasonRepository
 from f1_api.schemas.shared.enums import DriverOrderField
 from f1_api.schemas.shared.requests import SortOrder
 from f1_api.utils import get_cache_key
@@ -12,8 +13,9 @@ from fastapi import HTTPException
 
 
 class DriverService:
-    def __init__(self, driver_repository: DriverRepository):
+    def __init__(self, driver_repository: DriverRepository, season_repository: SeasonRepository):
         self._driver_repository = driver_repository
+        self._season_repository = season_repository
 
     async def get_drivers(
         self,
@@ -63,10 +65,12 @@ class DriverService:
 
         return results, total
 
-    async def get_driver_seasons(self, driver_id: str) -> Sequence[Season]:
+    async def get_driver_seasons(
+        self,
+        driver_id: str,
+    ) -> Sequence[RowMapping]:
         await self._get_existing_driver(driver_id)
-
-        return await self._driver_repository.get_driver_seasons(driver_id)
+        return await self._season_repository.get_driver_seasons(driver_id=driver_id)
 
     async def _get_existing_driver(self, driver_id: str) -> Driver:
         driver = await self._driver_repository.get_driver_by_id(driver_id)

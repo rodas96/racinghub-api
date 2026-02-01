@@ -1,10 +1,12 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import date
 from typing import Optional
 from decimal import Decimal
 
 
-class DriverResponse(BaseModel):
+class DriverBase(BaseModel):
+    """Basic driver information"""
+
     id: str
     name: str
     first_name: str
@@ -20,6 +22,8 @@ class DriverResponse(BaseModel):
     permanent_number: Optional[str] = None
     date_of_death: Optional[date] = None
 
+
+class DriverResponse(DriverBase):
     total_championship_wins: int
     total_race_entries: int
     total_race_starts: int
@@ -37,7 +41,7 @@ class DriverResponse(BaseModel):
     best_starting_grid_position: Optional[int] = None
     best_race_result: Optional[int] = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DriverRaceResultResponse(BaseModel):
@@ -54,7 +58,6 @@ class DriverRaceResultResponse(BaseModel):
     circuit_location: str | bool = Field(..., description="City/Country")
 
     # Result Details
-    position_display_order: int
     position: int | None = Field(None, description="Final classification position (null if DNF/DSQ)")
 
     driver_number: str
@@ -92,4 +95,14 @@ class DriverRaceResultResponse(BaseModel):
     tyre_manufacturer: str | None = Field(None, description="Tyre supplier")
     engine_manufacturer: str | None = Field(None, description="Engine supplier")
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DriverSeasonStatsResponse(BaseModel):
+    year: int
+    position: int | None
+    points: Decimal | None
+    race_wins: int | None
+    pole_positions: int | None
+
+    model_config = ConfigDict(from_attributes=True)
