@@ -3,7 +3,7 @@ from typing import Callable
 
 from f1_api.schemas.shared.responses import PagedResponse
 from f1_api.services.race_service import RaceService
-from f1_api.schemas.race_schema import RaceResponse, RaceResultResponse
+from f1_api.schemas.race_schema import RaceQualifyingResponse, RaceResponse, RaceResultResponse
 
 
 class RaceRouter:
@@ -34,6 +34,14 @@ class RaceRouter:
             summary="Get Race Results",
             operation_id="getRaceResults",
             response_model=list[RaceResultResponse],
+        )
+        self.router.add_api_route(
+            "{race_id}/qualifying",
+            self.get_race_qualifying_results,
+            methods=["GET"],
+            summary="Get Race Qualifying Results",
+            operation_id="getRaceQualifyingResults",
+            response_model=list[RaceQualifyingResponse],
         )
 
     async def get_races(
@@ -69,3 +77,8 @@ class RaceRouter:
         race_results = await self._race_service.get_race_results(race_id)
 
         return [RaceResultResponse.model_validate(result) for result in race_results]
+
+    async def get_race_qualifying_results(self, race_id: int) -> list[RaceQualifyingResponse]:
+        race_qualifying_results = await self._race_service.get_race_qualifying_results(race_id)
+
+        return [RaceQualifyingResponse.model_validate(result) for result in race_qualifying_results]

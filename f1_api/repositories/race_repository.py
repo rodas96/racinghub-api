@@ -1,13 +1,9 @@
 from typing import Sequence
 from f1_api.repositories.base_repository import BaseRepository
 from f1_api.models.models import (
-    Circuit,
-    Constructor,
-    EngineManufacturer,
-    GrandPrix,
     Race,
-    TyreManufacturer,
     t_race_result,
+    t_qualifying_result,
 )
 from sqlalchemy import RowMapping, select, func
 
@@ -34,6 +30,15 @@ class RaceRepository(BaseRepository):
             .where(t_race_result.c.race_id == race_id)
             .order_by(t_race_result.c.position_display_order)
         )
+        return (await self._db.execute(query)).mappings().all()
+
+    async def get_race_qualifying_results(self, race_id: int) -> Sequence[RowMapping]:
+        query = (
+            select(t_qualifying_result)
+            .where(t_qualifying_result.c.race_id == race_id)
+            .order_by(t_qualifying_result.c.position_display_order)
+        )
+
         return (await self._db.execute(query)).mappings().all()
 
     async def get_driver_races_results(self, skip: int, limit: int, driver_id: str) -> tuple[Sequence[RowMapping], int]:
