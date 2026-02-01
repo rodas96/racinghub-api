@@ -4,6 +4,7 @@ from sqlalchemy import RowMapping
 from f1_api.models.models import Driver
 from f1_api.repositories.driver_repository import DriverRepository
 from f1_api.constants.cache_keys import DRIVERS_PREFIX, DRIVERS_RESULTS_PREFIX
+from f1_api.repositories.race_repository import RaceRepository
 from f1_api.repositories.season_repository import SeasonRepository
 from f1_api.schemas.shared.enums import DriverOrderField
 from f1_api.schemas.shared.requests import SortOrder
@@ -13,9 +14,15 @@ from fastapi import HTTPException
 
 
 class DriverService:
-    def __init__(self, driver_repository: DriverRepository, season_repository: SeasonRepository):
+    def __init__(
+        self,
+        driver_repository: DriverRepository,
+        season_repository: SeasonRepository,
+        race_repository: RaceRepository,
+    ):
         self._driver_repository = driver_repository
         self._season_repository = season_repository
+        self._race_repository = race_repository
 
     async def get_drivers(
         self,
@@ -57,7 +64,7 @@ class DriverService:
             return res  # type: ignore
 
         await self._get_existing_driver(driver_id)
-        results, total = await self._driver_repository.get_driver_races_results(
+        results, total = await self._race_repository.get_driver_races_results(
             skip=skip, limit=limit, driver_id=driver_id
         )
 

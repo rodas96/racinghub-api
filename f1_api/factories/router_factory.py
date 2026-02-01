@@ -31,7 +31,9 @@ class RouterFactory:
         season_repository = SeasonRepository()
         race_repository = RaceRepository()
 
-        driver_service = DriverService(driver_repository=driver_repository, season_repository=season_repository)
+        driver_service = DriverService(
+            driver_repository=driver_repository, season_repository=season_repository, race_repository=race_repository
+        )
         season_service = SeasonService(season_repository=season_repository)
         race_service = RaceService(race_repository=race_repository)
 
