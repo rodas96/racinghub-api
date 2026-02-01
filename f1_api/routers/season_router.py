@@ -21,6 +21,14 @@ class SeasonRouter:
             operation_id="getSeasons",
             response_model=PagedResponse[SeasonResponse],
         )
+        self.router.add_api_route(
+            "/{year}",
+            self.get_season,
+            methods=["GET"],
+            summary="Get Season by Year",
+            operation_id="getSeasonByYear",
+            response_model=SeasonResponse,
+        )
 
     async def get_seasons(
         self,
@@ -45,3 +53,7 @@ class SeasonRouter:
             page=page,
             limit=limit,
         )
+
+    async def get_season(self, year: int) -> SeasonResponse:
+        season = await self._season_service.get_season(year=year)
+        return SeasonResponse.model_validate(season)
