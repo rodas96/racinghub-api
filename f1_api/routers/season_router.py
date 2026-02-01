@@ -11,7 +11,7 @@ class SeasonRouter:
             prefix="/seasons",
             tags=["seasons"],
         )
-        self._s_service = season_service
+        self._season_service = season_service
 
         self.router.add_api_route(
             "",
@@ -37,7 +37,7 @@ class SeasonRouter:
         ),
     ) -> PagedResponse[SeasonResponse]:
         skip = (page - 1) * limit
-        seasons, total = await self._s_service.get_seasons(skip=skip, limit=limit)
+        seasons, total = await self._season_service.get_seasons(skip=skip, limit=limit)
 
         return PagedResponse[SeasonResponse].create(
             data=[SeasonResponse.model_validate(season) for season in seasons],

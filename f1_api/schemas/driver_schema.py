@@ -98,7 +98,7 @@ class DriverRaceResultResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class DriverSeasonStatsResponse(BaseModel):
+class DriverSeasonResponse(BaseModel):
     year: int
     position: int | None
     points: Decimal | None

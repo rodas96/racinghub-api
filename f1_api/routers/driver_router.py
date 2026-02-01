@@ -1,6 +1,6 @@
 from typing import Callable
 from fastapi import APIRouter, Query
-from f1_api.schemas.driver_schema import DriverResponse, DriverRaceResultResponse, DriverSeasonStatsResponse
+from f1_api.schemas.driver_schema import DriverResponse, DriverRaceResultResponse, DriverSeasonResponse
 from f1_api.schemas.shared.enums import DriverOrderField
 from f1_api.schemas.shared.requests import SortOrder
 from f1_api.schemas.shared.responses import PagedResponse
@@ -49,7 +49,7 @@ class DriverRouter:
             methods=["GET"],
             summary="Get Driver Seasons",
             operation_id="getDriverSeasons",
-            response_model=list[DriverSeasonStatsResponse],
+            response_model=list[DriverSeasonResponse],
         )
 
     async def get_drivers(
@@ -122,7 +122,7 @@ class DriverRouter:
     async def get_driver_seasons(
         self,
         driver_id: str,
-    ) -> list[DriverSeasonStatsResponse]:
+    ) -> list[DriverSeasonResponse]:
         driver_seasons = await self._driver_service.get_driver_seasons(driver_id=driver_id)
 
-        return [DriverSeasonStatsResponse.model_validate(driver_season) for driver_season in driver_seasons]
+        return [DriverSeasonResponse.model_validate(driver_season) for driver_season in driver_seasons]
