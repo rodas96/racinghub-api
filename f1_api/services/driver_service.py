@@ -80,7 +80,7 @@ class DriverService:
         return await self._season_repository.get_driver_seasons(driver_id=driver_id)
 
     async def _get_existing_driver(self, driver_id: str) -> Driver:
-        driver = await self._driver_repository.get_driver_by_id(driver_id)
+        driver = await self._driver_repository.get_driver(driver_id)
 
         if not driver:
             raise HTTPException(status_code=404, detail="Driver not found")

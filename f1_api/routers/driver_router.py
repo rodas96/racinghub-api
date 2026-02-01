@@ -29,10 +29,10 @@ class DriverRouter:
         )
         self.router.add_api_route(
             "/{driver_id}",
-            self.get_driver_by_id,
+            self.get_driver,
             methods=["GET"],
-            summary="Get Driver by ID",
-            operation_id="getDriverById",
+            summary="Get Driver",
+            operation_id="getDriver",
             response_model=DriverResponse,
         )
         self.router.add_api_route(
@@ -87,7 +87,7 @@ class DriverRouter:
             total=total,
         )
 
-    async def get_driver_by_id(self, driver_id: str) -> DriverResponse:
+    async def get_driver(self, driver_id: str) -> DriverResponse:
         driver = await self._driver_service.get_driver(driver_id=driver_id)
 
         return DriverResponse.model_validate(driver)

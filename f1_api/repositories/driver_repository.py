@@ -35,7 +35,7 @@ class DriverRepository(BaseRepository):
 
         return drivers, total
 
-    async def get_driver_by_id(self, driver_id: str) -> Driver | None:
+    async def get_driver(self, driver_id: str) -> Driver | None:
         query = select(Driver).where(Driver.id == driver_id)
         result = await self._db.execute(query)
 
