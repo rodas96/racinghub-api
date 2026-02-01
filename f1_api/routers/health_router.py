@@ -13,7 +13,7 @@ class HealthRouter:
     ):
         self.router = factory(
             prefix="/health",
-            tags=["health"],
+            tags=["Health"],
         )
 
         self.router.add_api_route(

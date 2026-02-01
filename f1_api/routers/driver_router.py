@@ -15,7 +15,7 @@ class DriverRouter:
     ):
         self.router = factory(
             prefix="/drivers",
-            tags=["drivers"],
+            tags=["Drivers"],
         )
         self._driver_service = driver_service
 

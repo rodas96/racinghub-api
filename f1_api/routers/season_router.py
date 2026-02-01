@@ -9,7 +9,7 @@ class SeasonRouter:
     def __init__(self, season_service: SeasonService, factory: Callable[..., APIRouter]):
         self.router = factory(
             prefix="/seasons",
-            tags=["seasons"],
+            tags=["Seasons"],
         )
         self._season_service = season_service
 
