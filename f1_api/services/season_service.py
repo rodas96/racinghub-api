@@ -1,10 +1,7 @@
 from typing import Sequence
 
 from sqlalchemy import RowMapping
-from f1_api.constants.cache_keys import SEASONS_PREFIX
-from f1_api.prodivers.cache import get_cached, set_cached
 from f1_api.repositories.season_repository import SeasonRepository
-from f1_api.utils import get_cache_key
 
 
 class SeasonService:
@@ -12,16 +9,33 @@ class SeasonService:
         self._season_repository = season_repository
 
     async def get_seasons(self, skip: int, limit: int) -> tuple[Sequence[RowMapping], int]:
-        cache_key = get_cache_key(SEASONS_PREFIX, skip=skip, limit=limit)
+        rows, total = await self._season_repository.get_seasons(offset=skip, limit=limit)
 
-        res = await get_cached(cache_key)
-        if res is not None:
-            return res  # type: ignore
+        return [self._map_season_row(dict(row)) for row in rows], total
 
-        res = await self._season_repository.get_seasons(offset=skip, limit=limit)
-        await set_cached(cache_key, res)
-
-        return res
+    async def get_season(self, year: int) -> RowMapping:
+        return await self._season_repository.get_season(year=year)
 
     async def get_driver_seasons(self, driver_id: str) -> Sequence[RowMapping]:
         return await self._season_repository.get_driver_seasons(driver_id=driver_id)
+
+    def _map_season_row(self, row: dict) -> dict:
+        if row.get("champion_driver_id"):
+            row["champion"] = {
+                "driver_id": row["champion_driver_id"],
+                "driver_name": row["champion_driver_name"],
+                "points": row["champion_points"],
+                "race_wins": row["champion_race_wins"],
+                "pole_positions": row["champion_pole_positions"],
+            }
+
+        if row.get("constructor_champion_id"):
+            row["constructor_champion"] = {
+                "constructor_id": row["constructor_champion_id"],
+                "constructor_name": row["constructor_champion_name"],
+                "points": row["constructor_champion_points"],
+                "race_wins": row["constructor_champion_race_wins"],
+                "pole_positions": row["constructor_champion_pole_positions"],
+            }
+
+        return row
