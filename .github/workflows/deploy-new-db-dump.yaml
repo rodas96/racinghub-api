@@ -48,13 +48,13 @@ jobs:
           fi
 
           echo "🗄️ Starting new database (f1-db-new)..."
-          docker run -d \\
-            --name f1-db-new \\
-            --network f1api-deploy_internal \\
-            -e POSTGRES_USER=${POSTGRES_USER} \\
-            -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \\
-            -e POSTGRES_DB=${POSTGRES_DB} \\
-            -v $(pwd)/f1-db-dump-new.sql:/docker-entrypoint-initdb.d/f1-db-dump.sql:ro \\
+          docker run -d \
+            --name f1-db-new \
+            --network f1api-deploy_internal \
+            -e POSTGRES_USER=${POSTGRES_USER} \
+            -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+            -e POSTGRES_DB=${POSTGRES_DB} \
+            -v $(pwd)/f1-db-dump-new.sql:/docker-entrypoint-initdb.d/f1-db-dump.sql:ro \
             postgres:16
 
           if [ $? -ne 0 ]; then
