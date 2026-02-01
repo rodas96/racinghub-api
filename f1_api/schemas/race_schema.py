@@ -17,7 +17,6 @@ class RaceResultResponse(BaseModel):
     driver_number: str
     driver_id: str
     constructor_id: str
-    constructor_name: Optional[str] = None
     laps: Optional[int] = None
     time: Optional[str] = None
     gap: Optional[str] = None

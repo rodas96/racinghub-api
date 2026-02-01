@@ -1,7 +1,9 @@
+from typing import Sequence
 from fastapi import HTTPException
+from sqlalchemy import RowMapping
 from f1_api.repositories.race_repository import RaceRepository
-from f1_api.models.models import Race, RaceData
-from f1_api.schemas.race_schema import RaceResponse, RaceResultResponse
+from f1_api.models.models import Race
+from f1_api.schemas.race_schema import RaceResponse
 
 
 _SESSION_FIELDS = [
@@ -39,33 +41,9 @@ class RaceService:
 
         return race
 
-    async def get_race_results(self, race_id: int) -> list[RaceResultResponse]:
+    async def get_race_results(self, race_id: int) -> Sequence[RowMapping]:
         await self._get_existing_race(race_id=race_id)
-        results = await self._race_repository.get_race_results(race_id=race_id)
-
-        return [self._map_race_result(result) for result in results]
-
-    def _map_race_result(self, row: RaceData) -> RaceResultResponse:
-        return RaceResultResponse(
-            position_number=row.position_number,
-            position_text=row.position_text,
-            driver_number=row.driver_number,
-            driver_id=row.driver_id,
-            constructor_id=row.constructor_id,
-            laps=row.race_laps,
-            time=row.race_time,
-            gap=row.race_gap,
-            interval=row.race_interval,
-            points=row.race_points,
-            pit_stops=row.race_pit_stops,
-            grid_position=row.race_grid_position_number,
-            positions_gained=row.race_positions_gained,
-            fastest_lap=row.race_fastest_lap,
-            pole_position=row.race_pole_position,
-            driver_of_the_day=row.race_driver_of_the_day,
-            grand_slam=row.race_grand_slam,
-            reason_retired=row.race_reason_retired,
-        )
+        return await self._race_repository.get_race_results(race_id=race_id)
 
     def _map_race(self, row: Race) -> RaceResponse:
         data = {c.key: getattr(row, c.key) for c in row.__table__.columns}
