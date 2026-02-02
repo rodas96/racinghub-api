@@ -3,7 +3,14 @@ from typing import Callable
 
 from f1_api.schemas.shared.responses import PagedResponse
 from f1_api.services.race_service import RaceService
-from f1_api.schemas.race_schema import RaceGridResponse, RaceQualifyingResponse, RaceResponse, RaceResultResponse
+from f1_api.schemas.race_schema import (
+    RaceFastestLapResponse,
+    RaceGridResponse,
+    RacePitStopResponse,
+    RaceQualifyingResponse,
+    RaceResponse,
+    RaceResultResponse,
+)
 
 
 class RaceRouter:
@@ -67,6 +74,22 @@ class RaceRouter:
             operation_id="getSprintRaceStartingGrid",
             response_model=list[RaceGridResponse],
         )
+        self.router.add_api_route(
+            "/{race_id}/fastest-lap",
+            self.get_race_fastest_lap,
+            methods=["GET"],
+            summary="Get Race Fastest Lap",
+            operation_id="getRaceFastestLap",
+            response_model=list[RaceFastestLapResponse],
+        )
+        self.router.add_api_route(
+            "/{race_id}/pit-stops",
+            self.get_race_pit_stops,
+            methods=["GET"],
+            summary="Get Race Pit Stops",
+            operation_id="getRacePitStops",
+            response_model=list[RacePitStopResponse],
+        )
 
     async def get_races(
         self,
@@ -107,6 +130,11 @@ class RaceRouter:
 
         return [RaceGridResponse.model_validate(grid) for grid in starting_grid]
 
+    async def get_race_fastest_lap(self, race_id: int) -> list[RaceFastestLapResponse]:
+        fastest_lap = await self._race_service.get_race_fastest_lap(race_id=race_id)
+
+        return [RaceFastestLapResponse.model_validate(lap) for lap in fastest_lap]
+
     async def get_sprint_race_results(self, race_id: int) -> list[RaceResultResponse]:
         sprint_race_results = await self._race_service.get_sprint_race_results(race_id=race_id)
 
@@ -121,3 +149,8 @@ class RaceRouter:
         race_qualifying_results = await self._race_service.get_race_qualifying_results(race_id=race_id)
 
         return [RaceQualifyingResponse.model_validate(result) for result in race_qualifying_results]
+
+    async def get_race_pit_stops(self, race_id: int) -> list[RacePitStopResponse]:
+        race_pit_stops = await self._race_service.get_race_pit_stops(race_id=race_id)
+
+        return [RacePitStopResponse.model_validate(pit_stop) for pit_stop in race_pit_stops]

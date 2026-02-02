@@ -48,6 +48,16 @@ class RaceService:
 
         return await self._race_repository.get_race_results(race_id=race_id)
 
+    async def get_race_fastest_lap(self, race_id: int) -> Sequence[RowMapping]:
+        await self._get_existing_race(race_id=race_id)
+
+        return await self._race_repository.get_race_fastest_lap(race_id=race_id)
+
+    async def get_race_pit_stops(self, race_id: int) -> Sequence[RowMapping]:
+        await self._get_existing_race(race_id=race_id)
+
+        return await self._race_repository.get_race_pit_stops(race_id=race_id)
+
     async def get_race_starting_grid(self, race_id: int) -> Sequence[RowMapping]:
         await self._get_existing_race(race_id=race_id)
 

@@ -12,6 +12,8 @@ from f1_api.models.models import (
     t_qualifying_result,
     t_starting_grid_position,
     t_sprint_starting_grid_position,
+    t_fastest_lap,
+    t_pit_stop,
 )
 from sqlalchemy import RowMapping, select, func
 
@@ -76,6 +78,18 @@ class RaceRepository(BaseRepository):
             .where(t_sprint_starting_grid_position.c.race_id == race_id)
             .order_by(t_sprint_starting_grid_position.c.position_number)
         )
+
+        return (await self._db.execute(query)).mappings().all()
+
+    async def get_race_fastest_lap(self, race_id: int) -> Sequence[RowMapping]:
+        query = (
+            select(t_fastest_lap).where(t_fastest_lap.c.race_id == race_id).order_by(t_fastest_lap.c.position_number)
+        )
+
+        return (await self._db.execute(query)).mappings().all()
+
+    async def get_race_pit_stops(self, race_id: int) -> Sequence[RowMapping]:
+        query = select(t_pit_stop).where(t_pit_stop.c.race_id == race_id).order_by(t_pit_stop.c.stop)
 
         return (await self._db.execute(query)).mappings().all()
 
