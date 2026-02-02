@@ -36,12 +36,20 @@ class RaceRouter:
             response_model=list[RaceResultResponse],
         )
         self.router.add_api_route(
-            "{race_id}/qualifying",
+            "{race_id}/qualifying-results",
             self.get_race_qualifying_results,
             methods=["GET"],
             summary="Get Race Qualifying Results",
             operation_id="getRaceQualifyingResults",
             response_model=list[RaceQualifyingResponse],
+        )
+        self.router.add_api_route(
+            "{race_id}/sprint-results",
+            self.get_sprint_race_results,
+            methods=["GET"],
+            summary="Get Sprint Race Results",
+            operation_id="getSprintRaceResults",
+            response_model=list[RaceResultResponse],
         )
 
     async def get_races(
@@ -69,16 +77,21 @@ class RaceRouter:
         )
 
     async def get_race(self, race_id: int) -> RaceResponse:
-        race = await self._race_service.get_race(race_id)
+        race = await self._race_service.get_race(race_id=race_id)
 
         return RaceResponse.model_validate(race)
 
     async def get_race_results(self, race_id: int) -> list[RaceResultResponse]:
-        race_results = await self._race_service.get_race_results(race_id)
+        race_results = await self._race_service.get_race_results(race_id=race_id)
 
         return [RaceResultResponse.model_validate(result) for result in race_results]
 
+    async def get_sprint_race_results(self, race_id: int) -> list[RaceResultResponse]:
+        sprint_race_results = await self._race_service.get_sprint_race_results(race_id=race_id)
+
+        return [RaceResultResponse.model_validate(result) for result in sprint_race_results]
+
     async def get_race_qualifying_results(self, race_id: int) -> list[RaceQualifyingResponse]:
-        race_qualifying_results = await self._race_service.get_race_qualifying_results(race_id)
+        race_qualifying_results = await self._race_service.get_race_qualifying_results(race_id=race_id)
 
         return [RaceQualifyingResponse.model_validate(result) for result in race_qualifying_results]

@@ -50,6 +50,11 @@ class RaceService:
 
         return await self._race_repository.get_race_qualifying_results(race_id=race_id)
 
+    async def get_sprint_race_results(self, race_id: int) -> Sequence[RowMapping]:
+        await self._get_existing_race(race_id=race_id)
+
+        return await self._race_repository.get_race_sprint_results(race_id=race_id)
+
     def _map_race(self, row: Race) -> RaceResponse:
         data = {c.key: getattr(row, c.key) for c in row.__table__.columns}
         for session in _SESSION_FIELDS:

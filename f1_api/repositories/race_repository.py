@@ -8,6 +8,7 @@ from f1_api.models.models import (
     Race,
     TyreManufacturer,
     t_race_result,
+    t_sprint_race_result,
     t_qualifying_result,
 )
 from sqlalchemy import RowMapping, select, func
@@ -42,6 +43,15 @@ class RaceRepository(BaseRepository):
             select(t_qualifying_result)
             .where(t_qualifying_result.c.race_id == race_id)
             .order_by(t_qualifying_result.c.position_display_order)
+        )
+
+        return (await self._db.execute(query)).mappings().all()
+
+    async def get_race_sprint_results(self, race_id: int) -> Sequence[RowMapping]:
+        query = (
+            select(t_sprint_race_result)
+            .where(t_sprint_race_result.c.race_id == race_id)
+            .order_by(t_sprint_race_result.c.position_display_order)
         )
 
         return (await self._db.execute(query)).mappings().all()
