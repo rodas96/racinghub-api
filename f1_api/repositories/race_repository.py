@@ -10,6 +10,8 @@ from f1_api.models.models import (
     t_race_result,
     t_sprint_race_result,
     t_qualifying_result,
+    t_starting_grid_position,
+    t_sprint_starting_grid_position,
 )
 from sqlalchemy import RowMapping, select, func
 
@@ -36,7 +38,19 @@ class RaceRepository(BaseRepository):
             .where(t_race_result.c.race_id == race_id)
             .order_by(t_race_result.c.position_display_order)
         )
+
         return (await self._db.execute(query)).mappings().all()
+
+    async def get_race_starting_grid(self, race_id: int) -> Sequence[RowMapping]:
+        query = (
+            select(t_starting_grid_position)
+            .where(t_starting_grid_position.c.race_id == race_id)
+            .order_by(t_starting_grid_position.c.position_number)
+        )
+        a = (await self._db.execute(query)).mappings().all()
+        return a
+
+        # return (await self._db.execute(query)).mappings().all()
 
     async def get_race_qualifying_results(self, race_id: int) -> Sequence[RowMapping]:
         query = (
@@ -52,6 +66,15 @@ class RaceRepository(BaseRepository):
             select(t_sprint_race_result)
             .where(t_sprint_race_result.c.race_id == race_id)
             .order_by(t_sprint_race_result.c.position_display_order)
+        )
+
+        return (await self._db.execute(query)).mappings().all()
+
+    async def get_race_sprint_starting_grid(self, race_id: int) -> Sequence[RowMapping]:
+        query = (
+            select(t_sprint_starting_grid_position)
+            .where(t_sprint_starting_grid_position.c.race_id == race_id)
+            .order_by(t_sprint_starting_grid_position.c.position_number)
         )
 
         return (await self._db.execute(query)).mappings().all()

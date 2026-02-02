@@ -3,7 +3,7 @@ from typing import Callable
 
 from f1_api.schemas.shared.responses import PagedResponse
 from f1_api.services.race_service import RaceService
-from f1_api.schemas.race_schema import RaceQualifyingResponse, RaceResponse, RaceResultResponse
+from f1_api.schemas.race_schema import RaceGridResponse, RaceQualifyingResponse, RaceResponse, RaceResultResponse
 
 
 class RaceRouter:
@@ -20,7 +20,7 @@ class RaceRouter:
             response_model=PagedResponse[RaceResponse],
         )
         self.router.add_api_route(
-            "{race_id}",
+            "/{race_id}",
             self.get_race,
             methods=["GET"],
             summary="Get Race",
@@ -28,7 +28,7 @@ class RaceRouter:
             response_model=RaceResponse,
         )
         self.router.add_api_route(
-            "{race_id}/results",
+            "/{race_id}/results",
             self.get_race_results,
             methods=["GET"],
             summary="Get Race Results",
@@ -36,7 +36,15 @@ class RaceRouter:
             response_model=list[RaceResultResponse],
         )
         self.router.add_api_route(
-            "{race_id}/qualifying-results",
+            "/{race_id}/starting-grid",
+            self.get_race_starting_grid,
+            methods=["GET"],
+            summary="Get Race Starting Grid",
+            operation_id="getRaceStartingGrid",
+            response_model=list[RaceGridResponse],
+        )
+        self.router.add_api_route(
+            "/{race_id}/qualifying-results",
             self.get_race_qualifying_results,
             methods=["GET"],
             summary="Get Race Qualifying Results",
@@ -44,12 +52,20 @@ class RaceRouter:
             response_model=list[RaceQualifyingResponse],
         )
         self.router.add_api_route(
-            "{race_id}/sprint-results",
+            "/{race_id}/sprint-results",
             self.get_sprint_race_results,
             methods=["GET"],
             summary="Get Sprint Race Results",
             operation_id="getSprintRaceResults",
             response_model=list[RaceResultResponse],
+        )
+        self.router.add_api_route(
+            "/{race_id}/sprint-starting-grid",
+            self.get_race_sprint_starting_grid,
+            methods=["GET"],
+            summary="Get Sprint Race Starting Grid",
+            operation_id="getSprintRaceStartingGrid",
+            response_model=list[RaceGridResponse],
         )
 
     async def get_races(
@@ -86,10 +102,20 @@ class RaceRouter:
 
         return [RaceResultResponse.model_validate(result) for result in race_results]
 
+    async def get_race_starting_grid(self, race_id: int) -> list[RaceGridResponse]:
+        starting_grid = await self._race_service.get_race_starting_grid(race_id=race_id)
+
+        return [RaceGridResponse.model_validate(grid) for grid in starting_grid]
+
     async def get_sprint_race_results(self, race_id: int) -> list[RaceResultResponse]:
         sprint_race_results = await self._race_service.get_sprint_race_results(race_id=race_id)
 
         return [RaceResultResponse.model_validate(result) for result in sprint_race_results]
+
+    async def get_race_sprint_starting_grid(self, race_id: int) -> list[RaceGridResponse]:
+        sprint_starting_grid = await self._race_service.get_race_sprint_starting_grid(race_id=race_id)
+
+        return [RaceGridResponse.model_validate(grid) for grid in sprint_starting_grid]
 
     async def get_race_qualifying_results(self, race_id: int) -> list[RaceQualifyingResponse]:
         race_qualifying_results = await self._race_service.get_race_qualifying_results(race_id=race_id)
