@@ -1,7 +1,17 @@
-from typing import Sequence
-from sqlalchemy import RowMapping, func, select, text
+from typing import Any, Optional, Sequence
+from sqlalchemy import RowMapping, Select, func, select
+from sqlalchemy.orm import aliased
 from f1_api.models.models import (
+    Circuit,
+    Constructor,
+    Country,
+    Driver,
+    EngineManufacturer,
+    GrandPrix,
+    Race,
     Season,
+    SeasonConstructor,
+    SeasonConstructorStanding,
     SeasonDriver,
     SeasonDriverStanding,
 )
@@ -9,185 +19,172 @@ from f1_api.repositories.base_repository import BaseRepository
 
 
 class SeasonRepository(BaseRepository):
-    _base_season_query = """
-                WITH driver_champions AS (
-                    SELECT 
-                        sds.year, 
-                        sds.driver_id, 
-                        sds.points,
-                        sd.total_race_wins,
-                        sd.total_pole_positions
-                    FROM season_driver_standing sds
-                    JOIN season_driver sd 
-                    ON sd.year = sds.year AND sd.driver_id = sds.driver_id
-                    WHERE sds.position_number = 1
-                ),
-                constructor_champions AS (
-                    SELECT 
-                        scs.year, 
-                        scs.constructor_id, 
-                        scs.points,
-                        sc.total_race_wins,
-                        SUM(sd.total_pole_positions) AS total_pole_positions
-                    FROM season_constructor_standing scs
-                    JOIN season_constructor sc 
-                    ON sc.year = scs.year AND sc.constructor_id = scs.constructor_id
-                    LEFT JOIN season_driver_standing sds 
-                    ON sds.year = scs.year
-                    LEFT JOIN season_driver sd 
-                    ON sd.year = sds.year AND sd.driver_id = sds.driver_id
-                    WHERE scs.position_number = 1
-                    GROUP BY scs.year, scs.constructor_id, scs.points, sc.total_race_wins
-                )
-                SELECT
-                    s.year,
-                    
-                    -- Stats
-                    COUNT(DISTINCT r.id) AS total_races,
-                    COUNT(DISTINCT scs.constructor_id) AS total_constructors,
-                    COUNT(DISTINCT CASE WHEN sds.points > 0 THEN sds.driver_id END) AS total_drivers,
-                    
-                    -- Driver champion
-                    dc.driver_id AS champion_driver_id,
-                    d.name AS champion_driver_name,
-                    dc.points AS champion_points,
-                    dc.total_race_wins AS champion_race_wins,
-                    dc.total_pole_positions AS champion_pole_positions,
-                    
-                    -- Constructor champion
-                    cc.constructor_id AS constructor_champion_id,
-                    c.name AS constructor_champion_name,
-                    cc.points AS constructor_champion_points,
-                    cc.total_race_wins AS constructor_champion_race_wins,
-                    cc.total_pole_positions AS constructor_champion_pole_positions,
-                    
-                    -- Constructors
-                    COALESCE(
-                        json_agg(DISTINCT jsonb_build_object(
-                            'id', c_all.id,
-                            'name', c_all.name,
-                            'country_code', c_country.alpha2_code,
-                            'engine_manufacturer', em.name,
-                            'position', scs.position_number,
-                            'points', scs.points,
-                            'race_wins', sc.total_race_wins,
-                            'pole_positions', sc.total_pole_positions
+    def _base_season_query(self) -> Select[Any]:
+        driver_champ_stats = (
+            select(
+                SeasonDriver.year,
+                SeasonDriver.driver_id,
+                SeasonDriver.total_race_wins,
+                SeasonDriver.total_pole_positions,
+            ).join(
+                SeasonDriverStanding,
+                (SeasonDriverStanding.year == SeasonDriver.year)
+                & (SeasonDriverStanding.driver_id == SeasonDriver.driver_id)
+                & (SeasonDriverStanding.position_number == 1),
+            )
+        ).subquery()
 
-                        )) FILTER (WHERE c_all.id IS NOT NULL),
-                        '[]'
-                    ) AS constructors,
+        constructor_champ_stats = (
+            select(
+                SeasonConstructor.year,
+                SeasonConstructor.constructor_id,
+                SeasonConstructor.total_race_wins,
+                SeasonConstructor.total_pole_positions,
+            ).join(
+                SeasonConstructorStanding,
+                (SeasonConstructorStanding.year == SeasonConstructor.year)
+                & (SeasonConstructorStanding.constructor_id == SeasonConstructor.constructor_id)
+                & (SeasonConstructorStanding.position_number == 1),
+            )
+        ).subquery()
 
-                    -- Drivers
-                    COALESCE(
-                        json_agg(DISTINCT jsonb_build_object(
-                            'id', d_all.id,
-                            'name', d_all.name,
-                            'abbr', d_all.abbreviation,
-                            'number', d_all.permanent_number,
-                            'position', sds.position_number,
-                            'points', sds.points,
-                            'race_wins', sd.total_race_wins,
-                            'pole_positions', sd.total_pole_positions
-                        )) FILTER (WHERE d_all.id IS NOT NULL),
-                        '[]'
-                    ) AS drivers,
+        DriverChamp = aliased(SeasonDriverStanding)
+        ConstructorChamp = aliased(SeasonConstructorStanding)
 
-                    -- Engine manufacturers
-                    COALESCE(
-                        json_agg(DISTINCT jsonb_build_object(
-                            'id', em_sum.id,
-                            'name', em_sum.name,
-                            'country_code', em_country.alpha2_code,
-                            'total_points', sem.total_points,
-                            'total_wins', sem.total_race_wins
-                        )) FILTER (WHERE em_sum.id IS NOT NULL),
-                        '[]'
-                    ) AS engine_manufacturers,
-
-                    -- Tyre manufacturers
-                    COALESCE(
-                        json_agg(DISTINCT jsonb_build_object(
-                            'id', tm.id,
-                            'name', tm.name,
-                            'country_code', tm_country.alpha2_code,
-                            'total_wins', stm.total_race_wins
-                        )) FILTER (WHERE tm.id IS NOT NULL),
-                        '[]'
-                    ) AS tyre_manufacturers,
-
-                    -- Races
-                    COALESCE(
-                        json_agg(DISTINCT jsonb_build_object(
-                            'id', r.id,
-                            'round', r.round,
-                            'date', r.date,
-                            'name', gp.full_name,
-                            'circuit', circ.full_name,
-                            'country_code', circ_country.alpha2_code,
-                            'laps', r.laps,
-                            'distance', r.distance
-                        )) FILTER (WHERE r.id IS NOT NULL),
-                        '[]'
-                    ) AS races
-                    
-                FROM season s
-
-                -- Races
-                LEFT JOIN race r ON r.year = s.year
-                LEFT JOIN circuit circ ON circ.id = r.circuit_id
-                LEFT JOIN country circ_country ON circ_country.id = circ.country_id
-                LEFT JOIN grand_prix gp ON gp.id = r.grand_prix_id
-
-                -- Constructors
-                LEFT JOIN season_constructor_standing scs ON scs.year = s.year
-                LEFT JOIN constructor c_all ON c_all.id = scs.constructor_id
-                LEFT JOIN country c_country ON c_country.id = c_all.country_id
-                LEFT JOIN engine_manufacturer em ON em.id = scs.engine_manufacturer_id
-                LEFT JOIN season_constructor sc ON sc.year = s.year AND sc.constructor_id = scs.constructor_id
-
-                -- Drivers
-                LEFT JOIN season_driver_standing sds ON sds.year = s.year
-                LEFT JOIN driver d_all ON d_all.id = sds.driver_id
-                LEFT JOIN season_driver sd ON sd.year = s.year AND sd.driver_id = sds.driver_id
-
-                -- Engine manufacturers
-                LEFT JOIN season_engine_manufacturer sem ON sem.year = s.year
-                LEFT JOIN engine_manufacturer em_sum ON em_sum.id = sem.engine_manufacturer_id
-                LEFT JOIN country em_country ON em_country.id = em_sum.country_id
-
-                -- Tyre manufacturers
-                LEFT JOIN season_tyre_manufacturer stm ON stm.year = s.year
-                LEFT JOIN tyre_manufacturer tm ON tm.id = stm.tyre_manufacturer_id
-                LEFT JOIN country tm_country ON tm_country.id = tm.country_id
-
-                -- Champions
-                LEFT JOIN driver_champions dc ON dc.year = s.year
-                LEFT JOIN driver d ON d.id = dc.driver_id
-
-                LEFT JOIN constructor_champions cc ON cc.year = s.year
-                LEFT JOIN constructor c ON c.id = cc.constructor_id
-                WHERE 1=1 {where_clause}
-                GROUP BY s.year,
-                        dc.driver_id, d.name, dc.points, dc.total_race_wins, dc.total_pole_positions,
-                        cc.constructor_id, c.name, cc.points, cc.total_race_wins, cc.total_pole_positions
-            """
+        query = (
+            select(
+                Season.year.label("year"),
+                func.count(func.distinct(Race.id)).label("total_races"),
+                func.count(func.distinct(SeasonDriver.driver_id)).label("total_drivers"),
+                func.count(func.distinct(SeasonConstructor.constructor_id)).label("total_constructors"),
+                Driver.id.label("champion_driver_id"),
+                Driver.full_name.label("champion_driver_name"),
+                DriverChamp.points.label("champion_driver_points"),
+                driver_champ_stats.c.total_race_wins.label("champion_driver_race_wins"),
+                driver_champ_stats.c.total_pole_positions.label("champion_driver_pole_positions"),
+                Constructor.id.label("champion_constructor_id"),
+                Constructor.name.label("champion_constructor_name"),
+                ConstructorChamp.points.label("champion_constructor_points"),
+                constructor_champ_stats.c.total_race_wins.label("champion_constructor_race_wins"),
+                constructor_champ_stats.c.total_pole_positions.label("champion_constructor_pole_positions"),
+            )
+            .join(Race, Race.year == Season.year)
+            .join(SeasonDriver, SeasonDriver.year == Season.year)
+            .join(SeasonConstructor, SeasonConstructor.year == Season.year)
+            .join(
+                DriverChamp,
+                (DriverChamp.year == Season.year) & (DriverChamp.position_number == 1),
+            )
+            .join(Driver, Driver.id == DriverChamp.driver_id)
+            .join(driver_champ_stats, driver_champ_stats.c.year == Season.year)
+            .join(
+                ConstructorChamp,
+                (ConstructorChamp.year == Season.year) & (ConstructorChamp.position_number == 1),
+            )
+            .join(Constructor, Constructor.id == ConstructorChamp.constructor_id)
+            .join(constructor_champ_stats, constructor_champ_stats.c.year == Season.year)
+            .group_by(
+                Season.year,
+                Driver.id,
+                Driver.full_name,
+                DriverChamp.points,
+                driver_champ_stats.c.total_race_wins,
+                driver_champ_stats.c.total_pole_positions,
+                Constructor.id,
+                Constructor.name,
+                ConstructorChamp.points,
+                constructor_champ_stats.c.total_race_wins,
+                constructor_champ_stats.c.total_pole_positions,
+            )
+        )
+        return query
 
     async def get_seasons(self, offset: int, limit: int) -> tuple[Sequence[RowMapping], int]:
-        query = text(
-            self._base_season_query.format(where_clause="") + " ORDER BY s.year DESC LIMIT :limit OFFSET :offset"
-        )
+        """Get a paginated list of seasons."""
+        query = self._base_season_query().order_by(Season.year.desc()).limit(limit).offset(offset)
         count_query = select(func.count()).select_from(Season)
 
-        results = (await self._db.execute(query, {"limit": limit, "offset": offset})).mappings().all()
-        total = await self._db.scalar(count_query) or 0
+        return (await self._db.execute(query)).mappings().all(), await self._db.scalar(count_query) or 0
 
-        return results, total
+    async def get_season(self, year: int) -> Optional[RowMapping]:
+        """Get a specific season by year."""
+        query = self._base_season_query().where(Season.year == year)
+        return (await self._db.execute(query)).mappings().first()
 
-    async def get_season(self, year: int) -> RowMapping | None:
-        query = text(self._base_season_query.format(where_clause="AND s.year = :year"))
-        result = await self._db.execute(query, {"year": year})
-        season = result.mappings().first()
-        return season
+    async def get_season_drivers(self, year: int) -> Sequence[RowMapping]:
+        """Get all drivers who competed in a specific season with their stats."""
+        query = (
+            select(
+                SeasonDriverStanding.driver_id.label("id"),
+                Driver.full_name.label("name"),
+                Driver.abbreviation.label("abbr"),
+                Driver.permanent_number.label("number"),
+                SeasonDriverStanding.position_number.label("position"),
+                SeasonDriverStanding.points.label("points"),
+                SeasonDriver.total_race_wins.label("race_wins"),
+                SeasonDriver.total_pole_positions.label("pole_positions"),
+            )
+            .join(Driver, Driver.id == SeasonDriverStanding.driver_id)
+            .join(
+                SeasonDriver,
+                (SeasonDriver.year == SeasonDriverStanding.year)
+                & (SeasonDriver.driver_id == SeasonDriverStanding.driver_id),
+            )
+            .where(SeasonDriverStanding.year == year)
+            .order_by(SeasonDriverStanding.position_display_order)
+        )
+
+        return (await self._db.execute(query)).mappings().all()
+
+    async def get_season_constructors(self, year: int) -> Sequence[RowMapping]:
+        """Get all constructors who competed in a specific season with their stats."""
+        query = (
+            select(
+                SeasonConstructorStanding.constructor_id.label("id"),
+                Constructor.name.label("name"),
+                Country.alpha2_code.label("country_code"),
+                SeasonConstructorStanding.engine_manufacturer_id.label("engine_manufacturer_id"),
+                EngineManufacturer.name.label("engine_manufacturer"),
+                SeasonConstructorStanding.position_number.label("position"),
+                SeasonConstructorStanding.points.label("points"),
+                SeasonConstructor.total_race_wins.label("race_wins"),
+                SeasonConstructor.total_pole_positions.label("pole_positions"),
+            )
+            .join(Constructor, Constructor.id == SeasonConstructorStanding.constructor_id)
+            .join(Country, Country.id == Constructor.country_id)
+            .join(EngineManufacturer, EngineManufacturer.id == SeasonConstructorStanding.engine_manufacturer_id)
+            .join(
+                SeasonConstructor,
+                (SeasonConstructor.year == SeasonConstructorStanding.year)
+                & (SeasonConstructor.constructor_id == SeasonConstructorStanding.constructor_id),
+            )
+            .where(SeasonConstructorStanding.year == year)
+            .order_by(SeasonConstructorStanding.position_display_order)
+        )
+
+        return (await self._db.execute(query)).mappings().all()
+
+    async def get_season_races(self, year: int) -> Sequence[RowMapping]:
+        """Get all races in a specific season."""
+        query = (
+            select(
+                Race.id.label("id"),
+                Race.round.label("round"),
+                Race.date.label("date"),
+                GrandPrix.name.label("name"),
+                Circuit.name.label("circuit"),
+                Country.alpha2_code.label("country_code"),
+                Race.laps.label("laps"),
+                Race.distance.label("distance"),
+            )
+            .join(GrandPrix, GrandPrix.id == Race.grand_prix_id)
+            .join(Circuit, Circuit.id == Race.circuit_id)
+            .join(Country, Country.id == Circuit.country_id)
+            .where(Race.year == year)
+            .order_by(Race.round)
+        )
+
+        return (await self._db.execute(query)).mappings().all()
 
     async def get_driver_seasons(self, driver_id: str) -> Sequence[RowMapping]:
         query = (
@@ -214,5 +211,4 @@ class SeasonRepository(BaseRepository):
             .order_by(SeasonDriverStanding.year.desc())
         )
 
-        results = (await self._db.execute(query)).mappings().all()
-        return results
+        return (await self._db.execute(query)).mappings().all()
