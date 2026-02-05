@@ -28,7 +28,7 @@ try:
             "sprint races, pit stop data, fastest laps, championship standings, and season calendars. "
             "Powered by the F1DB open-source project. Perfect for motorsport analytics, "
             "data visualization, fantasy racing apps, and historical research. "
-            "Data spans from 1950 to present. High-performance FastAPI implementation with pagination support. "
+            "Data spans from 1950 to present.  "
             "Note: This is an independent project and is not affiliated with or endorsed by Formula 1®. "
             "Official endpoint: racinghub.net/api/v1"
         ),
