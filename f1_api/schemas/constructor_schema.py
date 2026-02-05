@@ -1,5 +1,3 @@
-# schemas/constructor.py
-
 from pydantic import BaseModel, ConfigDict
 from decimal import Decimal
 from typing import Optional

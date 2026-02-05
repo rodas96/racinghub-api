@@ -1,5 +1,3 @@
-# repositories/constructor_repository.py
-
 from typing import Optional, Sequence
 from sqlalchemy import RowMapping, func, select
 from f1_api.models.models import (

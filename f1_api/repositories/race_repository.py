@@ -49,10 +49,8 @@ class RaceRepository(BaseRepository):
             .where(t_starting_grid_position.c.race_id == race_id)
             .order_by(t_starting_grid_position.c.position_number)
         )
-        a = (await self._db.execute(query)).mappings().all()
-        return a
 
-        # return (await self._db.execute(query)).mappings().all()
+        return (await self._db.execute(query)).mappings().all()
 
     async def get_race_qualifying_results(self, race_id: int) -> Sequence[RowMapping]:
         query = (
