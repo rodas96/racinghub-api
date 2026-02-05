@@ -3,10 +3,10 @@ from f1_api.factories.router_factory import RouterFactory
 from f1_api.settings import settings, Settings
 from f1_api.middleware.db_session_middleware import db_session_middleware
 from f1_api.middleware.cors_middleware import add_cors_middleware
-from importlib.metadata import version, PackageNotFoundError
 from f1_api.middleware.security_headers_middleware import security_headers_middleware
 from f1_api.middleware.process_time_middleware import process_time_middleware
 from f1_api.middleware.exception_handler_middleware import exception_handler_middleware
+from f1_api._version import __version__
 
 
 factory = RouterFactory()
@@ -25,11 +25,7 @@ def get_settings() -> Settings:
 
 
 def get_version() -> str:
-    v = version("f1_api")
-    if not v:
-        raise PackageNotFoundError("f1_api package not found cant determine version")
-
-    return v
+    return __version__
 
 
 def get_major_version() -> str:

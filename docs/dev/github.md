@@ -180,48 +180,6 @@ This prevents merging code that fails tests or quality checks.
 
 ### Creating a Release
 
-1. **Update version** (optional - setuptools-scm handles this automatically):
-
-   ```bash
-   git tag v1.2.3
-   ```
-
-2. **Push the tag**:
-
-   ```bash
-   git push origin v1.2.3
-   ```
-
-3. **Automated actions**:
-   - Builds Docker images
-   - Publishes to GitHub Container Registry with version tags
-
-### Version Tag Format
-
-Use semantic versioning for tags:
-
-- `v1.0.0` - Major release
-- `v1.1.0` - Minor release
-- `v1.1.1` - Patch release
-
-The `v` prefix is required for workflows to trigger.
-
-### Automated Versioning with setuptools-scm
-
-This project uses `setuptools-scm` for automatic versioning:
-
-- Version derived from git tags
-- Commit count added for development versions
-- No manual version updates needed
-
-```bash
-# Check current version
-python -c "from f1_api._version import version; print(version)"
-
-# Development version format: 1.2.3.dev4+g5f8a7bc
-# Released version format: 1.2.3
-```
-
 ## Container Image Publishing
 
 ### Image Naming

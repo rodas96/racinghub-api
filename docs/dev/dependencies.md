@@ -596,32 +596,6 @@ uv pip install -e .[dev,docs,performance]
 
 The build system is configured at the top of `pyproject.toml`:
 
-```toml
-[build-system]
-build-backend = "setuptools.build_meta"
-requires = ["setuptools>=67.0", "setuptools_scm[toml]>=7.1"]
-```
-
-**Components**:
-
-- **build-backend**: Uses setuptools for building packages
-- **setuptools**: Modern Python build system
-- **setuptools_scm**: Automatic versioning from git tags
-
-### Building Distribution Packages
-
-```bash
-# Build source and wheel distributions
-make build
-
-# Or manually
-python -m build
-
-# Creates:
-# dist/f1_api-X.Y.Z.tar.gz (source)
-# dist/f1_api-X.Y.Z-py3-none-any.whl (wheel)
-```
-
 ## Best Practices
 
 1. **Use pyproject.toml as single source of truth**: Don't mix with `setup.py` or `setup.cfg`
@@ -677,8 +651,6 @@ uv pip install -e .[dev]
 # Verify package is installed
 uv pip show package-name
 ```
-
-### "No module named 'setuptools_scm'"
 
 ```bash
 # Update uv and install build dependencies
@@ -736,13 +708,13 @@ This project uses [uv](https://docs.astral.sh/uv/) as the primary package manage
 
 ### Commands Comparison
 
-| Task | pip | uv |
-|------|-----|-----|
-| Install package | `pip install package` | `uv pip install package` |
-| Create venv | `python -m venv .venv` | `uv venv` |
-| Install Python | Requires pyenv/installer | `uv venv --python 3.14` (auto-downloads) |
-| Compile requirements | Requires pip-tools | `uv pip compile` (built-in) |
-| Speed | Baseline | 10-100x faster |
+| Task                 | pip                      | uv                                       |
+| -------------------- | ------------------------ | ---------------------------------------- |
+| Install package      | `pip install package`    | `uv pip install package`                 |
+| Create venv          | `python -m venv .venv`   | `uv venv`                                |
+| Install Python       | Requires pyenv/installer | `uv venv --python 3.14` (auto-downloads) |
+| Compile requirements | Requires pip-tools       | `uv pip compile` (built-in)              |
+| Speed                | Baseline                 | 10-100x faster                           |
 
 ## References
 

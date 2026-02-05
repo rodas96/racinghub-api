@@ -26,6 +26,7 @@ try:
         version=startup.get_version(),
         docs_url=f"{API_PREFIX}/docs",
         redoc_url=f"{API_PREFIX}/redoc",
+        openapi_url=f"{API_PREFIX}/openapi.json",
     )
 
     @app.get(API_PREFIX, include_in_schema=False)
@@ -36,7 +37,6 @@ try:
     async def root_redirect() -> RedirectResponse:
         return RedirectResponse(url=API_PREFIX)
 
-    # Add routers under /api/v0
     routers = startup.add_routers(app)
     startup.add_middlewares(app)
 

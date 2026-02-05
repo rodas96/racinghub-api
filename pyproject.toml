@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=67.0", "setuptools_scm[toml]>=7.1"]
+requires = ["setuptools>=67.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
@@ -7,10 +7,6 @@ readme = { file = ["README.md"] }
 
 [tool.setuptools.package-data]
 f1_api = ["py.typed"]
-
-[tool.setuptools_scm]
-fallback_version = "0.0.0-dev"
-write_to = "f1_api/_version.py"
 
 [tool.setuptools.packages.find]
 exclude = ["tests*", "docs*"]

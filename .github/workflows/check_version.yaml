@@ -1,0 +1,32 @@
+name: "Check API Version Update"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.11
+
+      - name: Check if _version.py changed
+        id: version_check
+        run: |
+          if git diff --name-only origin/main...HEAD | grep -q "^f1_api/_version.py$"; then
+            echo "Version file modified ✅"
+          else
+            echo "Version file not modified ❌"
+            exit 1
+
+      - name: Output version
+        run: |
+          source_version=$(python -c "from f1_api._version import __version__; print(__version__)")
+          echo "Current version in PR: $source_version"
