@@ -29,7 +29,7 @@ try:
 
     @app.get("/", include_in_schema=False)
     async def root() -> RedirectResponse:
-        return RedirectResponse(url="/docs")
+        return RedirectResponse(url="docs")
 
     routers = startup.add_routers(app)
     startup.add_middlewares(app)
