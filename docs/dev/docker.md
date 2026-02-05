@@ -198,7 +198,6 @@ The `.dockerignore` file uses a **deny-by-default** approach for maximum securit
 !/.python-version
 !/db
 !/docker
-!/alembic.ini
 !/LICENSE
 !/makefile
 !/pyproject.toml
@@ -326,103 +325,6 @@ COPY --from=builder /usr/local/lib/python3.14/site-packages/ /usr/local/lib/pyth
 # Copy application
 COPY ./ /app
 ```
-
-## Prestart Scripts
-
-Each service includes a prestart script that runs before the main application:
-
-### FastAPI Prestart (`docker/www/prestart.sh`)
-
-The FastAPI prestart script:
-
-1. **Waits for database**: Uses `netcat` to check PostgreSQL availability
-2. **Runs migrations**: Executes `alembic upgrade head` automatically
-3. **Creates test data**: If `CREATE_TEST_DATA` is set, populates the database
-
-```bash
-#!/usr/bin/env bash
-
-
-# Wait for PostgreSQL to be ready
-if [ ! -z "$IS_DEV" ]; then
-  DB_HOST=$(python -c "from urllib.parse import urlparse; print(urlparse('${DATABASE_URL}').netloc.split('@')[-1]);")
-  if [ ! -z "$DB_HOST" ]; then
-    while ! nc -zv ${DB_HOST} 5432  > /dev/null 2> /dev/null; do
-      echo "Waiting for postgres to be available at host '${DB_HOST}'"
-      sleep 1
-    done
-  fi
-fi
-
-# Run migrations
-echo "Run Database Migrations"
-python -m alembic upgrade head
-
-# Create test data if requested
-if [ ! -z "$CREATE_TEST_DATA" ]; then
-  echo "Creating test data..."
-  python -m f1_api.cli test-data
-fi
-
-```
-
-## Development vs Production
-
-### Development Configuration
-
-**docker-compose.yaml** is optimized for development:
-
-- Volume mounts for live code updates
-- Hot-reload enabled
-- Debug logging enabled
-- Exposed ports for direct access
-- Simple passwords and credentials
-
-```bash
-# Start development environment
-docker-compose up
-
-# Your code changes are immediately reflected
-# No need to rebuild images
-```
-
-### Production Configuration
-
-For production, create a separate `docker-compose.prod.yaml`:
-
-```yaml
-services:
-  www:
-    image: ghcr.io/your-org/f1_api-www:latest
-    restart: always
-    # NO volume mounts - code is in image
-    ports:
-      - "8000:80" # Don't expose on port 80 directly
-    environment:
-      IS_DEV: false
-      RELOAD: false
-      DATABASE_URL: ${DATABASE_URL} # Load from secure secrets
-      SECRET_KEY: ${SECRET_KEY}
-    deploy:
-      replicas: 3
-      resources:
-        limits:
-          cpus: "1"
-          memory: 512M
-        reservations:
-          cpus: "0.5"
-          memory: 256M
-```
-
-**Production Best Practices**:
-
-1. Use tagged image versions (not `latest`)
-2. Load secrets from secure stores (not .env files)
-3. Don't expose internal ports
-4. Configure resource limits
-5. Enable restart policies
-6. Use health checks
-7. Run behind a reverse proxy (nginx, Traefik)
 
 ## Debugging in Docker
 

@@ -8,7 +8,7 @@ from f1_api.prodivers.logger import get_logger
 
 logger = get_logger()
 
-
+API_PREFIX = f"/api/v{startup.get_major_version()}"
 try:
 
     @asynccontextmanager
@@ -23,13 +23,13 @@ try:
         title="F1 API",
         description="An API for Formula 1 data",
         version=startup.get_version(),
-        docs_url="/docs",
-        redoc_url="/redoc",
+        docs_url=f"{API_PREFIX}/docs",
+        redoc_url=f"{API_PREFIX}/redoc",
     )
 
     @app.get("/", include_in_schema=False)
     async def root() -> RedirectResponse:
-        return RedirectResponse(url="docs")
+        return RedirectResponse(url=f"{API_PREFIX}/docs")
 
     routers = startup.add_routers(app)
     startup.add_middlewares(app)

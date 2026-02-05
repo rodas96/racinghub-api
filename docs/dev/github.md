@@ -51,8 +51,6 @@ The project includes the following GitHub Actions workflows in `.github/workflow
 
 ### Database Workflows
 
-**alembic.yaml** - Migration Validation
-
 - **Trigger**: Every push and pull request
 - **Purpose**: Ensures all database model changes have corresponding migrations
 - **Command**: `make check_ungenerated_migrations`
@@ -71,7 +69,7 @@ The project includes the following GitHub Actions workflows in `.github/workflow
 - **Trigger**:
   - Pull requests (build only, no push)
   - Pushes to `main` branch
-  - Version tags (v*.*.*)
+  - Version tags (v*.*.\*)
 - **Purpose**: Builds and publishes Docker images to GitHub Container Registry
 - **Images**:
   - `ghcr.io/EXAMPLE/f1_api.www` - FastAPI web server
@@ -114,7 +112,7 @@ Publishing workflows trigger on version tags:
 on:
   push:
     tags:
-      - "v*.*.*"  # Matches v1.0.0, v2.1.3, etc.
+      - "v*.*.*" # Matches v1.0.0, v2.1.3, etc.
 ```
 
 Create a tag to trigger a release:
@@ -174,7 +172,6 @@ Configure branch protection for `main` to require passing checks:
      - pytest
      - ruff
      - mypy
-     - alembic
      - paracelsus
 
 This prevents merging code that fails tests or quality checks.
@@ -316,7 +313,7 @@ Edit workflow files in `.github/workflows/`:
 # Add a new Python version to test matrix
 strategy:
   matrix:
-    version: ["3.10", "3.11", "3.12", "3.15"]  # Add 3.15
+    version: ["3.10", "3.11", "3.12", "3.15"] # Add 3.15
 ```
 
 ### Conditional Workflow Execution
@@ -346,7 +343,7 @@ jobs:
         run: make test
 
   deploy:
-    needs: test  # Only runs if 'test' succeeds
+    needs: test # Only runs if 'test' succeeds
     runs-on: ubuntu-latest
     steps:
       - name: Deploy
@@ -395,11 +392,6 @@ Add `ACTIONS_STEP_DEBUG` secret with value `true` for verbose logging.
 - Verify environment variables
 - Check for missing dependencies
 - Review test isolation
-
-**Alembic check fails:**
-
-- Run `make create_migration MESSAGE="description"` locally
-- Commit and push the new migration file
 
 **Docker build fails:**
 
@@ -473,8 +465,8 @@ updates:
    on:
      push:
        paths-ignore:
-         - '**.md'
-         - 'docs/**'
+         - "**.md"
+         - "docs/**"
    ```
 
 ## Best Practices

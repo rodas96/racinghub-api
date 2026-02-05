@@ -1,6 +1,6 @@
 # Database
 
-This project uses [SQLAlchemy](https://www.sqlalchemy.org/) as its ORM (Object-Relational Mapper) and [Alembic](https://alembic.sqlalchemy.org/) for database migrations, providing full async/await support for high-performance database operations.
+This project uses [SQLAlchemy](https://www.sqlalchemy.org/) as its
 
 ## Configuration
 
@@ -359,169 +359,6 @@ def test_create_user(fastapi_client):
 
 See [Testing Documentation](./testing.md#testing-database-operations) for more details on testing with databases.
 
-## Migrations with Alembic
-
-Alembic manages database schema changes through migration scripts, allowing you to version and track database structure over time.
-
-### Creating Migrations
-
-Alembic automatically detects changes in your models and generates migration scripts:
-
-```bash
-# Create a new migration
-make create_migration MESSAGE="add user table"
-
-# This creates a file like: db/versions/abc123_add_user_table.py
-```
-
-The migration generation process:
-
-1. Creates a temporary SQLite database
-2. Applies all existing migrations to it
-3. Compares the current models with the migrated database schema
-4. Generates a migration script with the differences
-5. Automatically formats the generated script with ruff
-
-### Migration Structure
-
-Generated migrations contain `upgrade()` and `downgrade()` functions:
-
-```python
-"""add user table
-
-Revision ID: abc123
-Revises: xyz789
-Create Date: 2024-01-15 10:30:00.000000
-
-"""
-from alembic import op
-import sqlalchemy as sa
-
-# revision identifiers, used by Alembic.
-revision = 'abc123'
-down_revision = 'xyz789'
-branch_labels = None
-depends_on = None
-
-
-def upgrade() -> None:
-    """Upgrade database schema."""
-    op.create_table(
-        'users',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(100), nullable=False),
-        sa.Column('email', sa.String(255), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('email')
-    )
-
-
-def downgrade() -> None:
-    """Downgrade database schema."""
-    op.drop_table('users')
-```
-
-### Running Migrations
-
-```bash
-# Apply all pending migrations
-make run_migrations
-
-# Equivalent to:
-alembic upgrade head
-
-# Downgrade one migration
-alembic downgrade -1
-
-# Downgrade to a specific revision
-alembic downgrade abc123
-
-# View migration history
-alembic history
-
-# Show current migration version
-alembic current
-```
-
-### Checking for Ungenerated Migrations
-
-Before creating a new migration, check if there are pending model changes:
-
-```bash
-# Check if models have changed since last migration
-make check_ungenerated_migrations
-
-# Equivalent to:
-alembic check
-```
-
-This command will:
-
-- Exit with code 0 if no changes are detected
-- Exit with code 1 if there are ungenerated changes
-- Useful in CI/CD to ensure migrations are created for all model changes
-
-### Migration Best Practices
-
-1. **Descriptive messages**: Use clear, concise migration messages
-
-   ```bash
-   make create_migration MESSAGE="add user email verification fields"
-   ```
-
-2. **Small, focused migrations**: Each migration should address one logical change
-
-   ```bash
-   # Good - separate migrations
-   make create_migration MESSAGE="add users table"
-   make create_migration MESSAGE="add user indexes"
-
-   # Bad - one large migration
-   make create_migration MESSAGE="add users and products and orders"
-   ```
-
-3. **Test migrations**: Always test both upgrade and downgrade
-
-   ```bash
-   # Test upgrade
-   make run_migrations
-
-   # Test downgrade
-   alembic downgrade -1
-
-   # Re-upgrade
-   make run_migrations
-   ```
-
-4. **Review generated migrations**: Always review auto-generated migrations before committing
-   - Check for unintended changes
-   - Add data migrations if needed
-   - Verify indexes and constraints
-
-5. **Data migrations**: For complex data transformations, add custom logic
-
-   ```python
-   def upgrade() -> None:
-       # Schema change
-       op.add_column('users', sa.Column('full_name', sa.String(200)))
-
-       # Data migration
-       connection = op.get_bind()
-       connection.execute(
-           sa.text("UPDATE users SET full_name = name WHERE full_name IS NULL")
-       )
-   ```
-
-### Database Reset and Cleanup
-
-```bash
-# Clear the database (removes SQLite file)
-make clear_db
-
-# Clear and re-run all migrations
-make reset_db
-```
-
 ## Common CRUD Patterns
 
 ### Create
@@ -762,6 +599,7 @@ make document_schema
 ```
 
 <!-- BEGIN_SQLALCHEMY_DOCS -->
+
 ```mermaid
 erDiagram
   chassis {
@@ -1664,6 +1502,7 @@ erDiagram
   country ||--o{ tyre_manufacturer : country_id
 
 ```
+
 <!-- END_SQLALCHEMY_DOCS -->
 
 ## References
@@ -1671,5 +1510,3 @@ erDiagram
 - [SQLAlchemy Documentation](https://docs.sqlalchemy.org/en/20/)
 - [SQLAlchemy ORM Documentation](https://docs.sqlalchemy.org/en/20/orm/)
 - [SQLAlchemy Async Documentation](https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html)
-- [Alembic Documentation](https://alembic.sqlalchemy.org/)
-- [Alembic Tutorial](https://alembic.sqlalchemy.org/en/latest/tutorial.html)

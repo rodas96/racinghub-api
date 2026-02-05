@@ -465,103 +465,6 @@ make build
 
 ## Database Targets
 
-### `make run_migrations`
-
-**Purpose**: Run all pending database migrations.
-
-**What it does**:
-
-- Executes Alembic migrations to bring database up to date
-- Applies all migrations that haven't been run yet
-- Updates the database schema
-
-**Usage**:
-
-```bash
-# Apply pending migrations
-make run_migrations
-```
-
-**Best Practice**: Run this after pulling changes that include new migrations.
-
-### `make create_migration`
-
-**Purpose**: Create a new database migration from model changes.
-
-**What it does**:
-
-1. Creates a temporary database
-2. Applies all existing migrations
-3. Compares current models to database schema
-4. Generates migration file for differences
-5. Formats the migration file
-
-**Usage**:
-
-```bash
-# Create migration with descriptive message
-make create_migration MESSAGE="add user profile fields"
-```
-
-**Requirements**:
-
-- Must provide a `MESSAGE` parameter
-- Message should describe the schema changes
-
-**Output**: Creates a new file in `db/versions/` with the migration code.
-
-**Example**:
-
-```bash
-# Add new column
-make create_migration MESSAGE="add email column to users"
-
-# Create new table
-make create_migration MESSAGE="add products table"
-
-# Modify relationship
-make create_migration MESSAGE="update order-product relationship"
-```
-
-### `make check_ungenerated_migrations`
-
-**Purpose**: Verify no model changes exist without migrations.
-
-**What it does**:
-
-- Compares current models to latest migration
-- Exits with error if unmigrated changes are detected
-- Ensures developers create migrations for model changes
-
-**Usage**:
-
-```bash
-# Check for missing migrations
-make check_ungenerated_migrations
-```
-
-**Best Practice**: Run this in CI to catch forgotten migrations.
-
-### `make document_schema`
-
-**Purpose**: Update database schema documentation.
-
-**What it does**:
-
-- Introspects SQLAlchemy models
-- Generates schema tables and diagrams
-- Injects schema into `docs/dev/database.md`
-- Uses Paracelsus to auto-generate documentation
-
-**Usage**:
-
-```bash
-# Update schema docs after model changes
-make document_schema
-```
-
-**Best Practice**: Include this in `make chores` to keep docs current.
-
 ### `make paracelsus_check`
 
 **Purpose**: Verify database schema documentation is up-to-date.
@@ -662,7 +565,6 @@ USE_SYSTEM_PYTHON=true make install
 
 **Effect**:
 
-- Used by Alembic for migrations
 - Allows targeting different databases
 
 **Usage**:
@@ -929,7 +831,6 @@ The makefile is designed to work seamlessly in CI environments:
 - [GNU Make Manual](https://www.gnu.org/software/make/manual/)
 - [Python Packaging Guide](https://packaging.python.org/)
 - [pytest Documentation](https://docs.pytest.org/)
-- [Alembic Documentation](https://alembic.sqlalchemy.org/)
 
 ## See Also
 
