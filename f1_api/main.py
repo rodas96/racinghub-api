@@ -53,6 +53,13 @@ try:
             {"name": "Standings", "description": "Final championship standings for drivers and constructors by season"},
             {"name": "Health", "description": "API health check and status monitoring"},
         ],
+        contact={
+            "name": "RacingHub",
+            "url": "https://github.com/rodas96/f1-api",
+        },
+        license_info={
+            "name": "MIT License",
+        },
     )
 
     @app.get(API_PREFIX, include_in_schema=False)
