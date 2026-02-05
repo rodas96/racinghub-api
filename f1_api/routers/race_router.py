@@ -25,6 +25,10 @@ class RaceRouter:
             summary="Get Races",
             operation_id="getRaces",
             response_model=PagedResponse[RaceResponse],
+            description=(
+                "Retrieve a paginated list of all Formula 1 races, including race name, date, "
+                "season, circuit, and round. Supports pagination with page and limit parameters."
+            ),
         )
         self.router.add_api_route(
             "/{race_id}",
@@ -33,6 +37,10 @@ class RaceRouter:
             summary="Get Race",
             operation_id="getRace",
             response_model=RaceResponse,
+            description=(
+                "Retrieve detailed information about a specific Formula 1 race by its unique ID. "
+                "Includes date, circuit, country, season round, and race type."
+            ),
         )
         self.router.add_api_route(
             "/{race_id}/results",
@@ -41,6 +49,10 @@ class RaceRouter:
             summary="Get Race Results",
             operation_id="getRaceResults",
             response_model=list[RaceResultResponse],
+            description=(
+                "Retrieve the official results of a specific Formula 1 race. "
+                "Includes finishing positions, driver names, team results, points, and race status."
+            ),
         )
         self.router.add_api_route(
             "/{race_id}/starting-grid",
@@ -49,6 +61,10 @@ class RaceRouter:
             summary="Get Race Starting Grid",
             operation_id="getRaceStartingGrid",
             response_model=list[RaceGridResponse],
+            description=(
+                "Retrieve the starting grid for a specific Formula 1 race. "
+                "Includes driver positions, teams, and qualifying times."
+            ),
         )
         self.router.add_api_route(
             "/{race_id}/qualifying-results",
@@ -57,6 +73,10 @@ class RaceRouter:
             summary="Get Race Qualifying Results",
             operation_id="getRaceQualifyingResults",
             response_model=list[RaceQualifyingResponse],
+            description=(
+                "Retrieve qualifying session results for a specific Formula 1 race. "
+                "Includes driver positions, lap times, and team performance."
+            ),
         )
         self.router.add_api_route(
             "/{race_id}/sprint-results",
@@ -65,6 +85,10 @@ class RaceRouter:
             summary="Get Sprint Race Results",
             operation_id="getSprintRaceResults",
             response_model=list[RaceResultResponse],
+            description=(
+                "Retrieve the official results of a Formula 1 sprint race, including driver positions, "
+                "teams, and points scored."
+            ),
         )
         self.router.add_api_route(
             "/{race_id}/sprint-starting-grid",
@@ -73,6 +97,10 @@ class RaceRouter:
             summary="Get Sprint Race Starting Grid",
             operation_id="getSprintRaceStartingGrid",
             response_model=list[RaceGridResponse],
+            description=(
+                "Retrieve the starting grid for a Formula 1 sprint race. "
+                "Includes driver positions, teams, and qualifying performance."
+            ),
         )
         self.router.add_api_route(
             "/{race_id}/fastest-lap",
@@ -81,6 +109,10 @@ class RaceRouter:
             summary="Get Race Fastest Lap",
             operation_id="getRaceFastestLap",
             response_model=list[RaceFastestLapResponse],
+            description=(
+                "Retrieve details of the fastest lap in a specific Formula 1 race. "
+                "Includes driver, lap time, team, and lap number."
+            ),
         )
         self.router.add_api_route(
             "/{race_id}/pit-stops",
@@ -89,6 +121,10 @@ class RaceRouter:
             summary="Get Race Pit Stops",
             operation_id="getRacePitStops",
             response_model=list[RacePitStopResponse],
+            description=(
+                "Retrieve all pit stop information for a specific Formula 1 race. "
+                "Includes driver, lap, duration, and team data."
+            ),
         )
 
     async def get_races(

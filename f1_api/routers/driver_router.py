@@ -23,33 +23,97 @@ class DriverRouter:
             "",
             self.get_drivers,
             methods=["GET"],
-            summary="Get Drivers",
+            summary="Get All Drivers",
+            description=(
+                "Retrieve a paginated list of all Formula 1 drivers."
+                "Supports sorting by name, number, or code. Returns driver profiles including "
+                "nationality, date of birth, and career information. Historical data from 1950 onwards."
+            ),
             operation_id="getDrivers",
             response_model=PagedResponse[DriverResponse],
+            responses={
+                200: {
+                    "description": "Successfully retrieved paginated driver list",
+                },
+                422: {
+                    "description": "Invalid query parameters",
+                },
+            },
         )
+
         self.router.add_api_route(
             "/{driver_id}",
             self.get_driver,
             methods=["GET"],
-            summary="Get Driver",
+            summary="Get Driver by ID",
+            description=(
+                "Retrieve detailed information about a specific Formula 1 driver. "
+                "Returns complete driver profile including full name, nationality, birth date, "
+                "permanent number, and biographical data. Use driver reference ID (e.g., 'hamilton', 'verstappen')."
+            ),
             operation_id="getDriver",
             response_model=DriverResponse,
+            responses={
+                200: {
+                    "description": "Successfully retrieved driver information",
+                },
+                404: {
+                    "description": "Driver not found",
+                },
+                422: {
+                    "description": "Invalid driver ID format",
+                },
+            },
         )
+
         self.router.add_api_route(
             "/{driver_id}/results",
             self.get_driver_races_results,
             methods=["GET"],
-            summary="Get Driver Results",
+            summary="Get Driver Race Results",
+            description=(
+                "Retrieve complete race history for a specific driver. Returns paginated results "
+                "including finishing position, points scored, grid position, status, fastest lap times, "
+                "and race details. Covers all Grand Prix entries throughout the driver's career."
+            ),
             operation_id="getDriverRacesResults",
             response_model=PagedResponse[DriverRaceResultResponse],
+            responses={
+                200: {
+                    "description": "Successfully retrieved driver race results",
+                },
+                404: {
+                    "description": "Driver not found",
+                },
+                422: {
+                    "description": "Invalid parameters",
+                },
+            },
         )
+
         self.router.add_api_route(
             "/{driver_id}/seasons",
             self.get_driver_seasons,
             methods=["GET"],
-            summary="Get Driver Seasons",
+            summary="Get Driver Season History",
+            description=(
+                "Retrieve all seasons a driver competed in. Returns year-by-year participation "
+                "including constructor teams, championship standings, total points, wins, podiums, "
+                "and pole positions for each season. Useful for career progression analysis."
+            ),
             operation_id="getDriverSeasons",
             response_model=list[DriverSeasonResponse],
+            responses={
+                200: {
+                    "description": "Successfully retrieved driver season history",
+                },
+                404: {
+                    "description": "Driver not found or no season data available",
+                },
+                422: {
+                    "description": "Invalid driver ID format",
+                },
+            },
         )
 
     async def get_drivers(

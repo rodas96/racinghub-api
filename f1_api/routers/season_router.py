@@ -25,6 +25,11 @@ class SeasonRouter:
             summary="Get Seasons",
             operation_id="getSeasons",
             response_model=PagedResponse[SeasonResponse],
+            description=(
+                "Retrieve a paginated list of all Formula 1 seasons. "
+                "Includes season year, number of races, and champion information. "
+                "Supports pagination with page and limit parameters."
+            ),
         )
         self.router.add_api_route(
             "/{year}",
@@ -33,6 +38,11 @@ class SeasonRouter:
             summary="Get Season by Year",
             operation_id="getSeasonByYear",
             response_model=SeasonResponse,
+            description=(
+                "Retrieve detailed information for a specific Formula 1 season by year. "
+                "Includes season overview, total races, driver and constructor champions, "
+                "and key events during the season."
+            ),
         )
         self.router.add_api_route(
             "/{year}/drivers",
@@ -41,6 +51,10 @@ class SeasonRouter:
             summary="Get Season Drivers",
             operation_id="getSeasonDrivers",
             response_model=list[SeasonDriverResponse],
+            description=(
+                "Retrieve a list of all drivers who participated in a specific Formula 1 season. "
+                "Includes driver names, teams, nationalities, and championship points."
+            ),
         )
         self.router.add_api_route(
             "/{year}/constructors",
@@ -49,6 +63,10 @@ class SeasonRouter:
             summary="Get Season Constructors",
             operation_id="getSeasonConstructors",
             response_model=list[SeasonConstructorResponse],
+            description=(
+                "Retrieve a list of all constructors that competed in a specific Formula 1 season. "
+                "Includes constructor names, countries, team information, and championship points."
+            ),
         )
         self.router.add_api_route(
             "/{year}/races",
@@ -57,6 +75,10 @@ class SeasonRouter:
             summary="Get Season Races",
             operation_id="getSeasonRaces",
             response_model=list[SeasonRaceResponse],
+            description=(
+                "Retrieve a list of all races in a specific Formula 1 season. "
+                "Includes race names, dates, circuits, locations, and round numbers."
+            ),
         )
 
     async def get_seasons(

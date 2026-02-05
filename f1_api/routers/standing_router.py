@@ -17,12 +17,20 @@ class StandingRouter:
             self.get_driver_standings,
             methods=["GET"],
             response_model=list[DriverStandingResponse],
+            description=(
+                "Retrieve the final driver championship standings for a specific Formula 1 season. "
+                "Includes driver names, teams, points, wins, podiums, and overall ranking."
+            ),
         )
         self.router.add_api_route(
             "/{year}/constructors",
             self.get_constructor_standings,
             methods=["GET"],
             response_model=list[ConstructorStandingResponse],
+            description=(
+                "Retrieve the final constructor championship standings for a specific Formula 1 season. "
+                "Includes constructor names, total points, wins, podiums, and overall team ranking."
+            ),
         )
 
     async def get_driver_standings(self, year: int) -> list[DriverStandingResponse]:
