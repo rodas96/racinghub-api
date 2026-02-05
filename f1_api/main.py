@@ -9,6 +9,7 @@ from f1_api.prodivers.logger import get_logger
 logger = get_logger()
 
 API_PREFIX = f"/api/v{startup.get_major_version()}"
+
 try:
 
     @asynccontextmanager
@@ -16,7 +17,7 @@ try:
         """Manage application lifespan events."""
         configure_caches()
         yield
-        # Shutdown: cleanup would go here if needed
+        # Cleanup on shutdown (if needed)
 
     app = FastAPI(
         lifespan=lifespan,
@@ -27,13 +28,17 @@ try:
         redoc_url=f"{API_PREFIX}/redoc",
     )
 
-    @app.get("/", include_in_schema=False)
-    async def root() -> RedirectResponse:
+    @app.get(API_PREFIX, include_in_schema=False)
+    async def api_root_redirect() -> RedirectResponse:
         return RedirectResponse(url=f"{API_PREFIX}/docs")
 
+    @app.get("/", include_in_schema=False)
+    async def root_redirect() -> RedirectResponse:
+        return RedirectResponse(url=API_PREFIX)
+
+    # Add routers under /api/v0
     routers = startup.add_routers(app)
     startup.add_middlewares(app)
-
 
 except Exception as e:
     logger.exception(

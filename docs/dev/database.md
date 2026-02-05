@@ -599,7 +599,6 @@ make document_schema
 ```
 
 <!-- BEGIN_SQLALCHEMY_DOCS -->
-
 ```mermaid
 erDiagram
   chassis {
@@ -1502,7 +1501,6 @@ erDiagram
   country ||--o{ tyre_manufacturer : country_id
 
 ```
-
 <!-- END_SQLALCHEMY_DOCS -->
 
 ## References
