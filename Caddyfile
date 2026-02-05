@@ -1,6 +1,12 @@
 racinghub.net, www.racinghub.net {
-    reverse_proxy f1-api:80
-    encode gzip
+    handle /api/* {
+        reverse_proxy f1-api:80
+        encode gzip
+    }
+
+    # Future web app under /
+    # root * /srv/webapp
+    # file_server
 
     log {
         output stdout
