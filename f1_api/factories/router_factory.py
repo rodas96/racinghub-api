@@ -2,9 +2,12 @@ from enum import Enum
 from fastapi import APIRouter
 from f1_api.repositories.season_repository import SeasonRepository
 from f1_api.repositories.driver_repository import DriverRepository
+from f1_api.repositories.constructor_repository import ConstructorRepository
+from f1_api.routers.constructor_router import ConstructorRouter
 from f1_api.routers.race_router import RaceRouter
 from f1_api.repositories.race_repository import RaceRepository
 from f1_api.routers.season_router import SeasonRouter
+from f1_api.services.constructor_service import ConstructorService
 from f1_api.services.driver_service import DriverService
 from f1_api.routers.driver_router import DriverRouter
 from f1_api.routers.health_router import HealthRouter
@@ -30,16 +33,19 @@ class RouterFactory:
         driver_repository = DriverRepository()
         season_repository = SeasonRepository()
         race_repository = RaceRepository()
+        constructor_repository = ConstructorRepository()
 
         driver_service = DriverService(
             driver_repository=driver_repository, season_repository=season_repository, race_repository=race_repository
         )
         season_service = SeasonService(season_repository=season_repository)
         race_service = RaceService(race_repository=race_repository)
+        constructor_service = ConstructorService(constructor_repository=constructor_repository)
 
         season_router = SeasonRouter(season_service=season_service, factory=self.build)
         driver_router = DriverRouter(driver_service=driver_service, factory=self.build)
         race_router = RaceRouter(race_service=race_service, factory=self.build)
+        constructor_router = ConstructorRouter(constructor_service=constructor_service, factory=self.build)
         health_router = HealthRouter(factory=self.build)
 
         return [
@@ -47,4 +53,5 @@ class RouterFactory:
             season_router.router,
             race_router.router,
             health_router.router,
+            constructor_router.router,
         ]
