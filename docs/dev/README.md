@@ -39,16 +39,6 @@ Standards and best practices for writing and maintaining project documentation.
 
 CI/CD workflows for testing, linting, building, and deployment automation.
 
-## Project-Specific Documentation
-
-As your project grows, add documentation for:
-
-- **Architecture** - System design, component interactions, and architectural decisions
-- **API Reference** - Detailed API endpoints, request/response formats, and authentication
-- **Deployment** - Production deployment procedures, monitoring, and operations
-- **Troubleshooting** - Common issues, debugging techniques, and solutions
-- **Contributing** - Guidelines for contributors and development workflows
-
 ## Documentation Standards
 
 All documentation in this project follows the standards outlined in [documentation.md](./documentation.md). When adding new documentation:
