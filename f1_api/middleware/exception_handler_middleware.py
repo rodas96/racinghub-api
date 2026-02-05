@@ -7,16 +7,30 @@ logger = get_logger()
 
 
 async def exception_handler_middleware(
-    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
 ) -> Response:
     """
-    Middleware to handle exceptions and return JSON responses.
+    Middleware to catch unhandled exceptions and log structured info.
     """
     try:
-        response = await call_next(request)
-        return response
+        return await call_next(request)
+
     except Exception as e:
-        logger.exception(f"Exception: {request.method} {request.url.path} - {e}")
+        client_ip = request.client.host if request.client else None
+        request_id = request.headers.get("X-Request-ID")
+        route_name = getattr(request.scope.get("endpoint"), "__name__", None)
+
+        logger.exception(
+            "unhandled_exception",
+            method=request.method,
+            path=request.url.path,
+            route_name=route_name,
+            error_type=type(e).__name__,
+            client_ip=client_ip,
+            request_id=request_id,
+        )
+
         return JSONResponse(
             status_code=500,
             content={"detail": "An internal server error occurred."},

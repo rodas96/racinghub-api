@@ -36,5 +36,8 @@ try:
 
 
 except Exception as e:
-    logger.error(f"Error during app initialization: {e}")
-    raise e
+    logger.exception(
+        "app_initialization_failed",
+        error_type=type(e).__name__,
+    )
+    raise

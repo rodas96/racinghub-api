@@ -51,7 +51,6 @@ All projects include these essential dependencies:
 ### Database
 
 - **SQLAlchemy**: Comprehensive SQL toolkit and ORM for database operations
-- **alembic**: Database migration tool for SQLAlchemy
 - **aiosqlite**: Async SQLite driver for development and testing
 - **asyncpg**: High-performance async PostgreSQL driver for production
 - **psycopg2-binary**: Traditional PostgreSQL adapter (synchronous operations)
