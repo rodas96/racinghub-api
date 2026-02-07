@@ -53,6 +53,7 @@ try:
             {"name": "Standings", "description": "Final championship standings for drivers and constructors by season"},
             {"name": "Health", "description": "API health check and status monitoring"},
         ],
+        root_path=API_PREFIX,
         contact={
             "name": "RacingHub",
             "url": "https://github.com/rodas96/f1-api",

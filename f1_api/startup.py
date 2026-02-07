@@ -15,7 +15,7 @@ factory = RouterFactory()
 def add_routers(app: FastAPI) -> list[APIRouter]:
     routers = factory.build_routers()
     for router in routers:
-        app.include_router(router=router, prefix="/api/v" + get_major_version())
+        app.include_router(router=router)
 
     return routers
 
