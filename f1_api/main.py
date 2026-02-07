@@ -59,6 +59,7 @@ try:
         },
         license_info={
             "name": "MIT License",
+            "identifier": "MIT",
         },
     )
 
