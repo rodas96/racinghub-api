@@ -1,4 +1,4 @@
-# f1_api
+# racinghub-api
 
 Formula 1 api. Historical and up to date data
 
