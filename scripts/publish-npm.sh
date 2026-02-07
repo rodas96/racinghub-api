@@ -1,7 +1,5 @@
 #!/bin/bash
-
 set -euo pipefail
-
 
 OPENAPI_URL="${OPENAPI_URL:-https://racinghub.net/api/v1/openapi.json}"
 GENERATOR_VERSION="${GENERATOR_VERSION:-7.13.0}"
@@ -27,9 +25,7 @@ curl -sSL \
   "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/${GENERATOR_VERSION}/openapi-generator-cli-${GENERATOR_VERSION}.jar" \
   -o "$GENERATOR_JAR"
 
-
 echo "Generating Node SDK..."
-
 rm -rf "$NODE_OUTPUT"
 
 java -jar "$GENERATOR_JAR" generate \
@@ -37,24 +33,23 @@ java -jar "$GENERATOR_JAR" generate \
   -g typescript-fetch \
   -o "$NODE_OUTPUT" \
   --additional-properties=npmName="$NODE_PACKAGE_NAME",npmVersion="$VERSION",supportsES6=true
-#
-echo "Publishing to npm..."
 
+echo "Publishing to npm..."
 cd "$NODE_OUTPUT"
 
-echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN:-}" > ~/.npmrc
+echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
 
 npm install
 
-if npm publish 2>&1 | tee /tmp/npm_publish.log; then
-  echo "✅ Published successfully"
+if npm publish --access public 2>&1 | tee /tmp/npm_publish.log; then
+    echo "✅ Published successfully"
 else
-  if grep -q "previously published" /tmp/npm_publish.log; then
-    echo "⚠️ Version already exists — skipping publish"
-  else
-    echo "❌ npm publish failed"
-    exit 1
-  fi
+    if grep -q "previously published" /tmp/npm_publish.log; then
+        echo "⚠️ Version already exists — skipping publish"
+    else
+        echo "❌ npm publish failed"
+        exit 1
+    fi
 fi
 
 cd - >/dev/null
