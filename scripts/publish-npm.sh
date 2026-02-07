@@ -41,11 +41,9 @@ echo "Publishing to npm..."
 
 cd "$NODE_OUTPUT"
 
-echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN:-}" > ~/.npmrc
-
 npm install
 
-if npm publish 2>&1 | tee /tmp/npm_publish.log; then
+if npm publish --access public 2>&1 | tee /tmp/npm_publish.log; then
   echo "✅ Published successfully"
 else
   if grep -q "previously published" /tmp/npm_publish.log; then
@@ -59,3 +57,4 @@ fi
 cd - >/dev/null
 
 echo "🎉 Done!"
+
