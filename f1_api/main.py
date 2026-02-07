@@ -33,9 +33,9 @@ try:
             "Official endpoint: racinghub.net/api/v1"
         ),
         version=startup.get_version(),
-        docs_url=f"{API_PREFIX}/docs",
-        redoc_url=f"{API_PREFIX}/redoc",
-        openapi_url=f"{API_PREFIX}/openapi.json",
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json",
         openapi_tags=[
             {"name": "Drivers", "description": "Driver data, career statistics, race results, and season history"},
             {
@@ -66,11 +66,11 @@ try:
 
     @app.get(API_PREFIX, include_in_schema=False)
     async def api_root_redirect() -> RedirectResponse:
-        return RedirectResponse(url=f"{API_PREFIX}/docs")
+        return RedirectResponse(url="/docs")
 
     @app.get("/", include_in_schema=False)
     async def root_redirect() -> RedirectResponse:
-        return RedirectResponse(url=API_PREFIX)
+        return RedirectResponse(url="docs")
 
     routers = startup.add_routers(app)
     startup.add_middlewares(app)
