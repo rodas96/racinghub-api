@@ -39,16 +39,6 @@ Standards and best practices for writing and maintaining project documentation.
 
 CI/CD workflows for testing, linting, building, and deployment automation.
 
-## Documentation Standards
-
-All documentation in this project follows the standards outlined in [documentation.md](./documentation.md). When adding new documentation:
-
-- Use real, working code examples from this project
-- Include practical usage patterns
-- Test all code examples before publishing
-- Keep documentation updated as code changes
-- Follow the established structure and style
-
 ## Quick Reference
 
 - **Setup**: Run `make install` to set up your development environment
@@ -57,7 +47,3 @@ All documentation in this project follows the standards outlined in [documentati
 - **Configuration**: See [settings.md](./settings.md) for environment variables and settings
 - **Local Development**: Use `docker compose up` for local services, see [docker.md](./docker.md)
 - **All Make Commands**: See [makefile.md](./makefile.md) for complete reference
-
----
-
-_This documentation is maintained by the development team. If you find issues or have suggestions, please contribute improvements!_
