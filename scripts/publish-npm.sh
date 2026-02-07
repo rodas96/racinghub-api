@@ -37,7 +37,7 @@ java -jar "$GENERATOR_JAR" generate \
 echo "Publishing to npm..."
 cd "$NODE_OUTPUT"
 
-echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+npm config set //registry.npmjs.org/:_authToken="${NPM_TOKEN}"
 
 npm install
 
@@ -48,6 +48,7 @@ else
         echo "⚠️ Version already exists — skipping publish"
     else
         echo "❌ npm publish failed"
+        cat /tmp/npm_publish.log
         exit 1
     fi
 fi
