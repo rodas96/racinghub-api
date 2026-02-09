@@ -4,7 +4,7 @@ import time
 from fastapi import Request, HTTPException
 from enum import Enum
 from f1_api.settings import settings
-from f1_api.prodivers.cache import get_cache
+from f1_api.providers.cache import get_cache
 
 
 class RateLimitTier(Enum):

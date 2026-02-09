@@ -1,7 +1,7 @@
 import time
 from typing import Awaitable, Callable
 from fastapi import Request, Response
-from f1_api.prodivers.logger import get_logger
+from f1_api.providers.logger import get_logger
 
 logger = get_logger()
 
