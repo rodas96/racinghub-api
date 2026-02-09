@@ -9,7 +9,7 @@ curl https://racinghub.net/api/v1/drivers/max-verstappen
 ```
 
 ```bash
-pip install racinghub_client
+pip install racinghub-client
 ```
 
 ```python
