@@ -1,4 +1,4 @@
-from fastapi import Request, Response
+from fastapi import Request, Response, HTTPException
 from starlette.responses import JSONResponse
 from typing import Awaitable, Callable
 from f1_api.prodivers.logger import get_logger
@@ -15,6 +15,13 @@ async def exception_handler_middleware(
     """
     try:
         return await call_next(request)
+
+    except HTTPException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content=e.detail,
+            headers=e.headers or {},
+        )
 
     except Exception as e:
         client_ip = request.client.host if request.client else None

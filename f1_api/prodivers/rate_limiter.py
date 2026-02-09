@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import hashlib
+import time
 from fastapi import Request, HTTPException
 from enum import Enum
 from f1_api.settings import settings
@@ -35,18 +36,29 @@ class RateLimiter:
         window = config["window"]
 
         identifier = self._get_identifier(request)
-
         key = f"rate_limit:{tier.value}:{identifier}"
 
         cache = get_cache("persistent")
+        data = await cache.get(key)
 
-        current = await cache.increment(key)
+        current_time = int(time.time())
 
-        if current == 1:
-            await cache.expire(key, window)
+        if data is None:
+            current = 1
+            reset_time = current_time + window
+            await cache.set(key, {"count": current, "reset": reset_time}, ttl=window)
+        else:
+            reset_time = data["reset"]
+            if current_time >= reset_time:
+                current = 1
+                reset_time = current_time + window
+                await cache.set(key, {"count": current, "reset": reset_time}, ttl=window)
+            else:
+                current = data["count"] + 1
+                await cache.set(key, {"count": current, "reset": reset_time}, ttl=window)
 
         if current > limit:
-            ttl = await cache.ttl(key)
+            retry_after = max(1, reset_time - current_time)
 
             raise HTTPException(
                 status_code=429,
@@ -55,9 +67,9 @@ class RateLimiter:
                     "tier": tier.value,
                     "limit": limit,
                     "window": window,
-                    "retry_after": ttl,
+                    "retry_after": retry_after,
                 },
-                headers={"Retry-After": str(ttl)},
+                headers={"Retry-After": str(retry_after)},
             )
 
         return RateLimitInfo(
@@ -69,7 +81,7 @@ class RateLimiter:
 
     def _get_identifier(self, request: Request) -> str:
         if xff := request.headers.get("x-forwarded-for"):
-            return xff
+            return xff.split(",")[0].strip()
         elif request.client:
             return request.client.host
         else:

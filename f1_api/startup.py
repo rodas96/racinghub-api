@@ -37,8 +37,8 @@ def get_major_version() -> str:
 
 def add_middlewares(app: FastAPI) -> None:
     add_cors_middleware(app)
-    app.middleware("http")(security_headers_middleware)
-    app.middleware("http")(exception_handler_middleware)
-    app.middleware("http")(process_time_middleware)
-    app.middleware("http")(db_session_middleware)
     app.middleware("http")(rate_limiting_middleware)
+    app.middleware("http")(db_session_middleware)
+    app.middleware("http")(process_time_middleware)
+    app.middleware("http")(exception_handler_middleware)
+    app.middleware("http")(security_headers_middleware)

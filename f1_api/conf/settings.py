@@ -5,5 +5,4 @@ from .cache import CacheSettings
 
 
 class Settings(DatabaseSettings, CacheSettings, LoggerSettings, RateLimiterSettings):
-    project_name: str = "f1_api"
     env: str = "dev"
