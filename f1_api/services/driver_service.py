@@ -9,7 +9,7 @@ from f1_api.repositories.season_repository import SeasonRepository
 from f1_api.schemas.shared.enums import DriverOrderField
 from f1_api.schemas.shared.requests import SortOrder
 from f1_api.utils import get_cache_key
-from f1_api.prodivers.cache import get_cached, set_cached
+from f1_api.providers.cache import get_cached, set_cached
 from fastapi import HTTPException
 
 

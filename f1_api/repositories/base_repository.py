@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from f1_api.prodivers.db import get_db_from_context
+from f1_api.providers.db import get_db_from_context
 
 
 class BaseRepository:

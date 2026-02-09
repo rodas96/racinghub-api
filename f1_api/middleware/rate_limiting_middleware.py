@@ -1,6 +1,6 @@
 from fastapi import Request, Response
 from typing import Callable, Awaitable
-from f1_api.prodivers.rate_limiter import RateLimiter
+from f1_api.providers.rate_limiter import RateLimiter
 
 limiter = RateLimiter()
 

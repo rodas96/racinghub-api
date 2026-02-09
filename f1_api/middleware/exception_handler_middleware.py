@@ -1,7 +1,7 @@
 from fastapi import Request, Response, HTTPException
 from starlette.responses import JSONResponse
 from typing import Awaitable, Callable
-from f1_api.prodivers.logger import get_logger
+from f1_api.providers.logger import get_logger
 
 logger = get_logger()
 
