@@ -54,7 +54,7 @@ jobs:
 
             while [ $ELAPSED -lt $TIMEOUT ]; do
               # Check logs for the final "ready to accept connections" message
-              if docker logs f1-db-new 2>&1 | grep -q "database system is ready to accept connections"; then
+                if docker logs f1-db-new 2>&1 | grep -qi "init process complete"; then
                 LOG_FOUND=true
                 break
               fi
