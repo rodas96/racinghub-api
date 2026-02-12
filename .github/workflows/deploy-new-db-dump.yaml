@@ -81,7 +81,7 @@ jobs:
             docker rename f1-db-new f1-db
             docker network disconnect f1api-deploy_internal f1-db || true
             docker network connect --alias f1-db f1api-deploy_internal f1-db
-            docker compose start f1-api
+            docker compose up -d --no-deps f1-api
 
             echo "🗑️ Removing old database..."
             docker stop f1-db-old || true
