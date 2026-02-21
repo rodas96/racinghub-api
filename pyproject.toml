@@ -24,6 +24,7 @@ dependencies = [
   "aiosqlite",
   "asyncpg",
   "fastapi",
+  "fastapi-mcp>=0.4.0",
   "loguru",
   "psycopg2-binary",
   "pydantic~=2.0",

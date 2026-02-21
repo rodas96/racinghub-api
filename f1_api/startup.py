@@ -1,5 +1,6 @@
 from fastapi import APIRouter, FastAPI
-from f1_api.factories.router_factory import RouterFactory
+
+from f1_api.factories.router_factory import build_routers
 from f1_api.settings import settings, Settings
 from f1_api.middleware.db_session_middleware import db_session_middleware
 from f1_api.middleware.cors_middleware import add_cors_middleware
@@ -10,11 +11,8 @@ from f1_api.middleware.exception_handler_middleware import exception_handler_mid
 from f1_api._version import __version__
 
 
-factory = RouterFactory()
-
-
 def add_routers(app: FastAPI) -> list[APIRouter]:
-    routers = factory.build_routers()
+    routers = build_routers()
     for router in routers:
         app.include_router(router=router)
 

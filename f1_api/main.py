@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from f1_api.providers.cache import configure_caches
 from f1_api import startup
 from f1_api.providers.logger import get_logger
+from fastapi_mcp import FastApiMCP  # type: ignore[import-untyped]
 
 logger = get_logger()
 
@@ -74,6 +75,9 @@ try:
 
     routers = startup.add_routers(app)
     startup.add_middlewares(app)
+    mcp = FastApiMCP(app)
+    mcp.mount_http()
+
 
 except Exception as e:
     logger.exception(
