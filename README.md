@@ -48,8 +48,11 @@ const driver_results = await driversApi.getDriverRacesResults({
 ```
 
 ## MCP Support
-All endpoints are listed as tools as well under `https://racinghub.net/api/v1/mcp`.
-To check the available tools you can use: `https://modelcontextprotocol.io/docs/tools/inspector`
+All API endpoints are exposed as MCP tools at:
+`https://racinghub.net/api/v1/mcp`
+
+You can inspect the available tools using the MCP Inspector:
+https://modelcontextprotocol.io/docs/tools/inspector
 
 Example of an agent using it:
 <img width="2048" height="954" alt="image" src="https://github.com/user-attachments/assets/0390554a-ea48-4410-8f4b-a5a5874ce0c5" />
