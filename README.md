@@ -47,6 +47,15 @@ const driver_results = await driversApi.getDriverRacesResults({
 });
 ```
 
+## MCP Support
+All endpoints are listed as tools as well under `https://racinghub.net/api/v1/mcp`.
+To check the available tools you can use: `https://modelcontextprotocol.io/docs/tools/inspector`
+
+Example of an agent using it:
+<img width="2048" height="954" alt="image" src="https://github.com/user-attachments/assets/0390554a-ea48-4410-8f4b-a5a5874ce0c5" />
+<img width="2048" height="881" alt="image" src="https://github.com/user-attachments/assets/763e39ff-09c2-405d-be36-58c9e1e30037" />
+
+
 ## Developer Documentation
 Comprehensive developer documentation is available in [`docs/dev/`](./docs/dev/) covering testing, configuration, deployment, and all project features.
 
