@@ -20,6 +20,34 @@ from f1_api.repositories.base_repository import BaseRepository
 
 class SeasonRepository(BaseRepository):
     def _base_season_query(self) -> Select[Any]:
+
+        race_counts = (
+            select(
+                Race.year.label("year"),
+                func.count(Race.id).label("total_races"),
+            )
+            .group_by(Race.year)
+            .subquery()
+        )
+
+        driver_counts = (
+            select(
+                SeasonDriver.year.label("year"),
+                func.count(func.distinct(SeasonDriver.driver_id)).label("total_drivers"),
+            )
+            .group_by(SeasonDriver.year)
+            .subquery()
+        )
+
+        constructor_counts = (
+            select(
+                SeasonConstructor.year.label("year"),
+                func.count(func.distinct(SeasonConstructor.constructor_id)).label("total_constructors"),
+            )
+            .group_by(SeasonConstructor.year)
+            .subquery()
+        )
+
         driver_champ_stats = (
             select(
                 SeasonDriver.year,
@@ -54,9 +82,9 @@ class SeasonRepository(BaseRepository):
         query = (
             select(
                 Season.year.label("year"),
-                func.count(func.distinct(Race.id)).label("total_races"),
-                func.count(func.distinct(SeasonDriver.driver_id)).label("total_drivers"),
-                func.count(func.distinct(SeasonConstructor.constructor_id)).label("total_constructors"),
+                race_counts.c.total_races,
+                driver_counts.c.total_drivers,
+                constructor_counts.c.total_constructors,
                 Driver.id.label("champion_driver_id"),
                 Driver.full_name.label("champion_driver_name"),
                 DriverChamp.points.label("champion_driver_points"),
@@ -68,9 +96,9 @@ class SeasonRepository(BaseRepository):
                 constructor_champ_stats.c.total_race_wins.label("champion_constructor_race_wins"),
                 constructor_champ_stats.c.total_pole_positions.label("champion_constructor_pole_positions"),
             )
-            .join(Race, Race.year == Season.year)
-            .join(SeasonDriver, SeasonDriver.year == Season.year)
-            .join(SeasonConstructor, SeasonConstructor.year == Season.year)
+            .join(race_counts, race_counts.c.year == Season.year)
+            .join(driver_counts, driver_counts.c.year == Season.year)
+            .join(constructor_counts, constructor_counts.c.year == Season.year)
             .join(
                 DriverChamp,
                 (DriverChamp.year == Season.year) & (DriverChamp.position_number == 1),
@@ -83,20 +111,8 @@ class SeasonRepository(BaseRepository):
             )
             .join(Constructor, Constructor.id == ConstructorChamp.constructor_id)
             .join(constructor_champ_stats, constructor_champ_stats.c.year == Season.year)
-            .group_by(
-                Season.year,
-                Driver.id,
-                Driver.full_name,
-                DriverChamp.points,
-                driver_champ_stats.c.total_race_wins,
-                driver_champ_stats.c.total_pole_positions,
-                Constructor.id,
-                Constructor.name,
-                ConstructorChamp.points,
-                constructor_champ_stats.c.total_race_wins,
-                constructor_champ_stats.c.total_pole_positions,
-            )
         )
+
         return query
 
     async def get_seasons(self, offset: int, limit: int) -> tuple[Sequence[RowMapping], int]:
