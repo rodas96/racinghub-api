@@ -13,7 +13,8 @@ async def process_time_middleware(request: Request, call_next: Callable[[Request
     response_ms = round(process_time * 1000, 2)
 
     response.headers["X-Process-Time"] = str(process_time)
-    client_ip = request.client.host if request.client else None
+    client_ip = _get_client_ip(request)
+
     request_id = request.headers.get("X-Request-ID")
     route_name = getattr(request.scope.get("endpoint"), "__name__", None)
     status_code = getattr(response, "status_code", None)
@@ -38,3 +39,12 @@ async def process_time_middleware(request: Request, call_next: Callable[[Request
     )
 
     return response
+
+
+def _get_client_ip(request: Request) -> str:
+    if xff := request.headers.get("x-forwarded-for"):
+        return xff.split(",")[0].strip()
+    elif request.client:
+        return request.client.host
+    else:
+        return "unknown"
