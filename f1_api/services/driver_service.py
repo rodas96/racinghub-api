@@ -67,9 +67,11 @@ class DriverService:
         seasons = await self._season_repository.get_driver_seasons(driver_id=driver_id)
         constructors = await self._season_repository.get_driver_season_constructors(driver_id=driver_id)
 
-        constructor_by_year = {r["year"]: r["constructor_name"] for r in constructors}
+        constructor_by_year = {}
+        for r in constructors:
+            constructor_by_year.setdefault(r["year"], []).append(r["constructors_name"])
 
-        res = [dict(season, constructor_name=constructor_by_year.get(season["year"])) for season in seasons]
+        res = [dict(season, constructors_name=constructor_by_year.get(season["year"], [])) for season in seasons]
 
         await set_cached(cache_key, res)
 
