@@ -137,11 +137,20 @@ class DriverRouter:
             SortOrder.ASC,
             description="Order direction if not specified, defaults to ascending",
         ),
+        q: str | None = Query(
+            None,
+            min_length=1,
+            description="Search drivers by name (e.g. 'ham', 'lewis ham')",
+        ),
     ) -> PagedResponse[DriverResponse]:
         skip = (page - 1) * limit
 
         drivers, total = await self._driver_service.get_drivers(
-            skip=skip, limit=limit, order_by=order_by, sort_by=sort_by
+            skip=skip,
+            limit=limit,
+            order_by=order_by,
+            sort_by=sort_by,
+            q=q,
         )
 
         return PagedResponse[DriverResponse].create(
