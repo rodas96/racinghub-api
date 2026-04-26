@@ -67,7 +67,7 @@ class DriverService:
         seasons = await self._season_repository.get_driver_seasons(driver_id=driver_id)
         constructors = await self._season_repository.get_driver_season_constructors(driver_id=driver_id)
 
-        constructor_by_year = {}
+        constructor_by_year: dict[int, list[str]] = {}
         for r in constructors:
             constructor_by_year.setdefault(r["year"], []).append(r["constructors_name"])
 
