@@ -8,7 +8,7 @@ from f1_api.repositories.race_repository import RaceRepository
 from f1_api.repositories.season_repository import SeasonRepository
 from f1_api.schemas.shared.enums import DriverOrderField
 from f1_api.schemas.shared.requests import SortOrder
-from f1_api.utils import get_cache_key
+from f1_api.utils import get_cache_key, parse_search_query
 from f1_api.providers.cache import get_cached, set_cached
 from fastapi import HTTPException
 
@@ -38,7 +38,7 @@ class DriverService:
             limit=limit,
             order_by=order_by,
             sort_by=sort_by,
-            tokens=self._tokenize_query(q) if q else None,
+            tokens=parse_search_query(q) if q else None,
         )
 
         return drivers, total
@@ -80,6 +80,3 @@ class DriverService:
             raise HTTPException(status_code=404, detail="Driver not found")
 
         return driver
-
-    def _tokenize_query(self, q: str) -> list[str]:
-        return [token.strip().lower() for token in q.split() if token.strip()]
