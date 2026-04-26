@@ -1,5 +1,5 @@
 from typing import Any, Optional, Sequence
-from sqlalchemy import RowMapping, Select, func, select
+from sqlalchemy import RowMapping, Select, distinct, func, select
 from sqlalchemy.orm import aliased
 from f1_api.models.models import (
     Circuit,
@@ -14,6 +14,7 @@ from f1_api.models.models import (
     SeasonConstructorStanding,
     SeasonDriver,
     SeasonDriverStanding,
+    SeasonEntrantDriver,
 )
 from f1_api.repositories.base_repository import BaseRepository
 
@@ -33,7 +34,7 @@ class SeasonRepository(BaseRepository):
         driver_counts = (
             select(
                 SeasonDriver.year.label("year"),
-                func.count(func.distinct(SeasonDriver.driver_id)).label("total_drivers"),
+                func.count(distinct(SeasonDriver.driver_id)).label("total_drivers"),
             )
             .group_by(SeasonDriver.year)
             .subquery()
@@ -42,7 +43,7 @@ class SeasonRepository(BaseRepository):
         constructor_counts = (
             select(
                 SeasonConstructor.year.label("year"),
-                func.count(func.distinct(SeasonConstructor.constructor_id)).label("total_constructors"),
+                func.count(distinct(SeasonConstructor.constructor_id)).label("total_constructors"),
             )
             .group_by(SeasonConstructor.year)
             .subquery()
@@ -227,4 +228,17 @@ class SeasonRepository(BaseRepository):
             .order_by(SeasonDriverStanding.year.desc())
         )
 
+        return (await self._db.execute(query)).mappings().all()
+
+    async def get_driver_season_constructors(self, driver_id: str) -> Sequence[RowMapping]:
+        query = (
+            select(
+                SeasonEntrantDriver.year.label("year"),
+                Constructor.name.label("constructors_name"),
+            )
+            .join(Constructor, Constructor.id == SeasonEntrantDriver.constructor_id)
+            .where(SeasonEntrantDriver.driver_id == driver_id)
+            .distinct()
+            .order_by(SeasonEntrantDriver.year.desc())
+        )
         return (await self._db.execute(query)).mappings().all()
