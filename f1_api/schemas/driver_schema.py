@@ -104,5 +104,6 @@ class DriverSeasonResponse(BaseModel):
     points: Decimal | None
     race_wins: int | None
     pole_positions: int | None
+    constructor_name: str | None
 
     model_config = ConfigDict(from_attributes=True)

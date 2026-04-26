@@ -14,6 +14,7 @@ from f1_api.models.models import (
     SeasonConstructorStanding,
     SeasonDriver,
     SeasonDriverStanding,
+    SeasonEntrantDriver,
 )
 from f1_api.repositories.base_repository import BaseRepository
 
@@ -227,4 +228,17 @@ class SeasonRepository(BaseRepository):
             .order_by(SeasonDriverStanding.year.desc())
         )
 
+        return (await self._db.execute(query)).mappings().all()
+
+    async def get_driver_season_constructors(self, driver_id: str) -> Sequence[RowMapping]:
+        query = (
+            select(
+                SeasonEntrantDriver.year.label("year"),
+                func.string_agg(func.distinct(Constructor.name), ", ").label("constructor_name"),
+            )
+            .join(Constructor, Constructor.id == SeasonEntrantDriver.constructor_id)
+            .where(SeasonEntrantDriver.driver_id == driver_id)
+            .group_by(SeasonEntrantDriver.year)
+            .order_by(SeasonEntrantDriver.year.desc())
+        )
         return (await self._db.execute(query)).mappings().all()
