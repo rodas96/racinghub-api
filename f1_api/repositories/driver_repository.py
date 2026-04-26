@@ -1,5 +1,5 @@
 from typing import Sequence
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from f1_api.models.models import (
     Driver,
 )
@@ -15,22 +15,39 @@ class DriverRepository(BaseRepository):
         limit: int,
         order_by: DriverOrderField | None = None,
         sort_by: SortOrder | None = None,
+        tokens: list[str] | None = None,
     ) -> tuple[Sequence[Driver], int]:
-        query = select(Driver).offset(skip).limit(limit)
+
+        query = select(Driver)
+        count_query = select(func.count()).select_from(Driver)
+
+        if tokens:
+            for token in tokens:
+                token = token.lower()
+                like = f"%{token}%"
+                abbr_like = token + "%"
+
+                condition = or_(
+                    func.lower(Driver.first_name).like(like),
+                    func.lower(Driver.last_name).like(like),
+                    func.lower(Driver.full_name).like(like),
+                    func.lower(Driver.name).like(like),
+                    func.lower(Driver.abbreviation).like(abbr_like),
+                )
+
+                query = query.where(condition)
+                count_query = count_query.where(condition)
 
         if order_by:
             order_column = getattr(Driver, order_by.value)
-            if sort_by == SortOrder.DESC:
-                order_column = order_column.desc()
-            else:
-                order_column = order_column.asc()
-
+            order_column = order_column.desc() if sort_by == SortOrder.DESC else order_column.asc()
             query = query.order_by(order_column)
+
+        query = query.offset(skip).limit(limit)
 
         result = await self._db.execute(query)
         drivers = result.scalars().all()
 
-        count_query = select(func.count()).select_from(Driver)
         total = await self._db.scalar(count_query) or 0
 
         return drivers, total
@@ -38,5 +55,4 @@ class DriverRepository(BaseRepository):
     async def get_driver(self, driver_id: str) -> Driver | None:
         query = select(Driver).where(Driver.id == driver_id)
         result = await self._db.execute(query)
-
         return result.scalars().first()
