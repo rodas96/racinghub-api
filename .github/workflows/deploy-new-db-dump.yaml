@@ -18,6 +18,7 @@ jobs:
 
       - name: SSH & deploy database to droplet
         uses: appleboy/ssh-action@master
+        timeout-minutes: 20
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
