@@ -23,6 +23,7 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
+          command_timeout: 30m
           script: |
             set -e
             cd ~/f1api-deploy
