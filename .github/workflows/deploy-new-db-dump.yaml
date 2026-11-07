@@ -50,7 +50,7 @@ jobs:
               postgres:16
 
             echo "⏳ Waiting for database initialization and import to complete..."
-            TIMEOUT=600
+            TIMEOUT=1500
             ELAPSED=0
             LOG_FOUND=false
 
